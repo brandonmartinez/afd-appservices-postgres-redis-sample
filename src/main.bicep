@@ -44,6 +44,10 @@ var networkingModuleParameters = {
   appServicesSubnetAddressPrefix: '10.0.1.0/24'
   bastionSubnetName: 'AzureBastionSubnet' // Must be this name: https://learn.microsoft.com/en-us/azure/bastion/configuration-settings#subnet
   bastionSubnetAddressPrefix: '10.0.200.0/24'
+
+  // Bastion Variables
+  bastionPublicIpAddressName: 'pip-${appenv}-bastion'
+  bastionName: 'bastion-${appenv}'
 }
 
 // Modules and Resources

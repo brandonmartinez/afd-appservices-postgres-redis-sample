@@ -162,6 +162,19 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
       }
     ]
   }
+  resource bastionSubnet 'subnets' existing = {
+    name: 'AzureBastionSubnet'
+  }
+}
+
+module bastion './networking-bastion.bicep' = {
+  name: 'bastion'
+  params: {
+    location: location
+    networkingModuleParameters: networkingModuleParameters
+    tags: tags
+    bastionSubnetId: virtualNetwork::bastionSubnet.id
+  }
 }
 
 // Outputs
