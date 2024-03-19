@@ -1,0 +1,6 @@
+# Folder to ignore
+.logs/
+.temp/
+
+# Files to ignore
+.env
