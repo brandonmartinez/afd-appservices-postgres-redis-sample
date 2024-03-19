@@ -14,7 +14,7 @@ debug "Sourcing .env file"
 
 set -a
 source .env
-export AZURE_RESOURCEGROUP="rg-$AZURE_WORKLOAD"
+export AZURE_RESOURCEGROUP="rg-$AZURE_APPENV"
 set +a
 
 WORKING_DIR=$(dirname "$(realpath "$0")")
@@ -37,6 +37,9 @@ az account set --subscription "$AZURE_SUBSCRIPTIONID"
 info "Setting default location to $AZURE_LOCATION and resource group to $AZURE_RESOURCEGROUP"
 az configure --defaults location="$AZURE_LOCATION" group="$AZURE_RESOURCEGROUP"
 
+info "Setting Bicep to use the locally installed binary (workaround for arm64 architecture)"
+az config set bicep.use_binary_from_path=True
+
 section "Starting Azure infrastructure deployment"
 
 info "Token substitution of environment variables to Bicep parameters"
@@ -49,9 +52,15 @@ info "Initiating the Bicep deployment of infrastructure"
 AZ_DEPLOYMENT_TIMESTAMP=$(date +"%Y-%m-%d-%H-%M-%S")
 
 AZ_DEPLOYMENT_NAME="AZ-$AZ_DEPLOYMENT_TIMESTAMP"
-# output=$(az deployment group create \
-#     -n "$AZ_DEPLOYMENT_NAME" \
-#     --template-file "$SRC_DIR/main.bicep" \
-#     --parameters "$TEMP_DIR/main.parameters.json" \
-#     -g "$AZURE_RESOURCEGROUP" \
-#     --query 'properties.outputs')
+output=$(az deployment group create \
+    -n "$AZ_DEPLOYMENT_NAME" \
+    --template-file "$SRC_DIR/main.bicep" \
+    --parameters "$TEMP_DIR/main.parameters.json" \
+    -g "$AZURE_RESOURCEGROUP" \
+    --verbose \
+    --query 'properties.outputs' | jq)
+
+debug $output
+
+section "Azure infrastructure deployment completed"
+info "For more information, open .logs/logs.txt"

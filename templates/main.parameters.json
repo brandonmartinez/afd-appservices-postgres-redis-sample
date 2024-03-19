@@ -5,8 +5,11 @@
         "location": {
             "value": "$AZURE_LOCATION"
         },
-        "workload": {
-            "value": "$AZURE_WORKLOAD"
+        "appenv": {
+            "value": "$AZURE_APPENV"
+        },
+        "publicIpAddress":{
+            "value": "$PUBLIC_IP_ADDRESS"
         }
     }
 }

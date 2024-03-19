@@ -1,3 +1,5 @@
 AZURE_LOCATION=''
-AZURE_WORKLOAD=''
+AZURE_APPENV=''
 AZURE_SUBSCRIPTIONID=''
+# Can get from here: http://ifconfig.me/ip
+PUBLIC_IP_ADDRESS=''
