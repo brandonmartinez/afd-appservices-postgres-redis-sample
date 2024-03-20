@@ -3,10 +3,10 @@
 	"image": "mcr.microsoft.com/devcontainers/base:jammy",
 	"features": {
 		"ghcr.io/devcontainers/features/azure-cli:1": {
+			"installBicep": true,
 			"version": "latest"
 		},
-		"ghcr.io/stuartleeks/dev-container-features/azure-cli-persistence:0": {},
-		"ghcr.io/rchaganti/vsc-devcontainer-features/azurebicep:1": {}
+		"ghcr.io/stuartleeks/dev-container-features/azure-cli-persistence:0": {}
 	},
 	"customizations": {
 		"vscode": {

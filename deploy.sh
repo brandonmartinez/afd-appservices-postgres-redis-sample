@@ -13,8 +13,13 @@ fi
 debug "Sourcing .env file"
 
 set -a
+
+# pulling from the .env file
 source .env
+# some other exports that are used
+export CURRENT_DATE_TIME=$(date +"%Y%m%dT%H%M")
 export AZURE_RESOURCEGROUP="rg-$AZURE_APPENV"
+
 set +a
 
 WORKING_DIR=$(dirname "$(realpath "$0")")
@@ -43,18 +48,21 @@ az config set bicep.use_binary_from_path=True
 section "Starting Azure infrastructure deployment"
 
 info "Token substitution of environment variables to Bicep parameters"
-envsubst < "$TEMPLATE_DIR/main.parameters.json" > "$TEMP_DIR/main.parameters.json"
+envsubst < "$TEMPLATE_DIR/main.bicepparam" > "$TEMP_DIR/main.bicepparam"
 
 info "Creating resource group $AZURE_RESOURCEGROUP if it does not exist"
 az group create --name "$AZURE_RESOURCEGROUP" --location "$AZURE_LOCATION"
 
 info "Initiating the Bicep deployment of infrastructure"
-AZ_DEPLOYMENT_TIMESTAMP=$(date +"%Y-%m-%d-%H-%M-%S")
 
-AZ_DEPLOYMENT_NAME="AZ-$AZ_DEPLOYMENT_TIMESTAMP"
+debug "Manually building the bicep template, as there are some cross-platform issues with az deployment group create"
+az bicep build --file "$SRC_DIR/main.bicep" --outdir "$TEMP_DIR"
+az bicep build-params --file "$TEMP_DIR/main.bicepparam" --outfile "$TEMP_DIR/main.parameters.json"
+
+AZ_DEPLOYMENT_NAME="AZ-$CURRENT_DATE_TIME"
 output=$(az deployment group create \
     -n "$AZ_DEPLOYMENT_NAME" \
-    --template-file "$SRC_DIR/main.bicep" \
+    --template-file "$TEMP_DIR/main.json" \
     --parameters "$TEMP_DIR/main.parameters.json" \
     -g "$AZURE_RESOURCEGROUP" \
     --verbose \

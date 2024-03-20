@@ -1,5 +1,8 @@
 // Parameters
 //////////////////////////////////////////////////
+@description('The current datetime.')
+param currentDateTime string = utcNow('yyyMMddTHmm')
+
 @description('The Azure region of the resources.')
 param location string
 
@@ -168,7 +171,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
 }
 
 module bastion './networking-bastion.bicep' = {
-  name: 'bastion'
+  name: 'bastion-${currentDateTime}'
   params: {
     location: location
     networkingModuleParameters: networkingModuleParameters

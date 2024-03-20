@@ -1,8 +1,5 @@
 // Parameters
 //////////////////////////////////////////////////
-@description('The current date.')
-param currentDate string = utcNow('yyyy-MM-dd')
-
 @description('The current datetime.')
 param currentDateTime string = utcNow('yyyMMddTHmm')
 
@@ -25,7 +22,7 @@ param resourcePassword string
 // Variables
 //////////////////////////////////////////////////
 var tags = {
-  deploymentDate: currentDate
+  deploymentDate: currentDateTime
   environment: appenv
 }
 var managementModuleParameters = {
