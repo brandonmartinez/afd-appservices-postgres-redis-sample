@@ -8,8 +8,14 @@
         "appenv": {
             "value": "$AZURE_APPENV"
         },
-        "publicIpAddress":{
+        "publicIpAddress": {
             "value": "$PUBLIC_IP_ADDRESS"
+        },
+        "certificateBase64String": {
+            "value": "$CERTIFICATE_BASE64_STRING"
+        },
+        "resourcePassword": {
+            "value": "$RESOURCE_PASSWORD"
         }
     }
 }

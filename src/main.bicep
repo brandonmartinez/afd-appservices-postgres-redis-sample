@@ -3,6 +3,9 @@
 @description('The current date.')
 param currentDate string = utcNow('yyyy-MM-dd')
 
+@description('The current datetime.')
+param currentDateTime string = utcNow('yyyMMddTHmm')
+
 @description('The Azure region of the resources.')
 param location string = resourceGroup().location
 
@@ -11,6 +14,13 @@ param appenv string
 
 @description('The public IP address to be used in allowing access to Azure services via Bastion.')
 param publicIpAddress string
+
+@description('The base64 encoded certificate to be used for the Front Door.')
+param certificateBase64String string
+
+@secure()
+@description('The password to be used for standard username-password access.')
+param resourcePassword string
 
 // Variables
 //////////////////////////////////////////////////
@@ -24,6 +34,19 @@ var managementModuleParameters = {
 
   // Application Insights Variables
   applicationInsightsName: 'appinsights-${appenv}'
+}
+
+var securityModuleParameters = {
+  // Managed Identity Variables
+  frontDoorManagedIdentityName: 'id-${appenv}-frontdoor'
+  virtualMachineManagedIdentityName: 'id-${appenv}-virtualmachine'
+
+  // Key Vault Variables
+  keyVaultName: replace('kv-${appenv}', '-', '')
+  certificateSecretName: 'cert-${appenv}'
+  certificateBase64String: certificateBase64String
+  resourcePasswordSecretName: 'password-${appenv}'
+  resourcePassword: resourcePassword
 }
 
 var networkingModuleParameters = {
@@ -48,12 +71,16 @@ var networkingModuleParameters = {
   // Bastion Variables
   bastionPublicIpAddressName: 'pip-${appenv}-bastion'
   bastionName: 'bastion-${appenv}'
+
+  // Front Door Variables
+  frontDoorWafPolicyName: replace('wafpolicy-${appenv}', '-', '')
+  frontDoorProfileName: 'afd-${appenv}'
 }
 
 // Modules and Resources
 //////////////////////////////////////////////////
 module management './management.bicep' = {
-  name: 'management'
+  name: 'management-${currentDateTime}'
   params: {
     location: location
     tags: tags
@@ -61,8 +88,17 @@ module management './management.bicep' = {
   }
 }
 
+module security './security.bicep' = {
+  name: 'security-${currentDateTime}'
+  params: {
+    location: location
+    tags: tags
+    securityModuleParameters: securityModuleParameters
+  }
+}
+
 module networking './networking.bicep' = {
-  name: 'networking'
+  name: 'networking-${currentDateTime}'
   params: {
     location: location
     tags: tags

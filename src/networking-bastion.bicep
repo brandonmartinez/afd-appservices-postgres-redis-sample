@@ -12,6 +12,8 @@ param tags object
 @description('ID of the subnet to deploy Bastion into.')
 param bastionSubnetId string
 
+// Resources
+//////////////////////////////////////////////////
 resource bastionPublicIpAddress 'Microsoft.Network/publicIPAddresses@2022-09-01' = {
   name: networkingModuleParameters.bastionPublicIpAddressName
   location: location

@@ -3,3 +3,7 @@ AZURE_APPENV=''
 AZURE_SUBSCRIPTIONID=''
 # Can get from here: http://ifconfig.me/ip
 PUBLIC_IP_ADDRESS=''
+# Use `base64 -w 0 FILE_NAME` (or `base64 -i FILE_NAME` on macOS) command to generate
+CERTIFICATE_BASE64_STRING=''
+CERTIFICATE_PASSWORD=''
+RESOURCE_PASSWORD=''

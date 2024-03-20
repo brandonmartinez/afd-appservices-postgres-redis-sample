@@ -58,9 +58,10 @@ output=$(az deployment group create \
     --parameters "$TEMP_DIR/main.parameters.json" \
     -g "$AZURE_RESOURCEGROUP" \
     --verbose \
-    --query 'properties.outputs' | jq)
+    --query 'properties.outputs')
 
-debug $output
+# Echo output to the log for easy access to the deployment outputs
+$(echo "$output" | jq --raw-output 'to_entries[] | (.key + "=" + .value.value)' | while IFS= read -r line; do debug "$line"; done)
 
 section "Azure infrastructure deployment completed"
 info "For more information, open .logs/logs.txt"
