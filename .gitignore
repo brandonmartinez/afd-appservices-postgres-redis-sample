@@ -4,4 +4,4 @@
 
 # Files to ignore
 .env
-*.drawio.bkp
+*.bkp
