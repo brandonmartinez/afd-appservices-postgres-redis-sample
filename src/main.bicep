@@ -77,7 +77,7 @@ var networkingModuleParameters = {
 // Modules and Resources
 //////////////////////////////////////////////////
 module management './management.bicep' = {
-  name: 'management-${currentDateTime}'
+  name: 'az-management-${currentDateTime}'
   params: {
     location: location
     tags: tags
@@ -86,7 +86,7 @@ module management './management.bicep' = {
 }
 
 module security './security.bicep' = {
-  name: 'security-${currentDateTime}'
+  name: 'az-security-${currentDateTime}'
   params: {
     location: location
     tags: tags
@@ -95,7 +95,7 @@ module security './security.bicep' = {
 }
 
 module networking './networking.bicep' = {
-  name: 'networking-${currentDateTime}'
+  name: 'az-networking-${currentDateTime}'
   params: {
     location: location
     tags: tags

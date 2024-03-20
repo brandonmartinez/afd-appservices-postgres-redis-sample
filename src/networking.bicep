@@ -171,7 +171,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
 }
 
 module bastion './networking-bastion.bicep' = {
-  name: 'bastion-${currentDateTime}'
+  name: 'az-bastion-${currentDateTime}'
   params: {
     location: location
     networkingModuleParameters: networkingModuleParameters

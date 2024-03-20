@@ -59,7 +59,7 @@ debug "Manually building the bicep template, as there are some cross-platform is
 az bicep build --file "$SRC_DIR/main.bicep" --outdir "$TEMP_DIR"
 az bicep build-params --file "$TEMP_DIR/main.bicepparam" --outfile "$TEMP_DIR/main.parameters.json"
 
-AZ_DEPLOYMENT_NAME="AZ-$CURRENT_DATE_TIME"
+AZ_DEPLOYMENT_NAME="az-main-$CURRENT_DATE_TIME"
 output=$(az deployment group create \
     -n "$AZ_DEPLOYMENT_NAME" \
     --template-file "$TEMP_DIR/main.json" \
