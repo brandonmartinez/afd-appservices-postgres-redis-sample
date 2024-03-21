@@ -16,3 +16,4 @@ ROOT_DOMAIN=''
 # Use `base64 -w 0 FILE_NAME` (or `base64 -i FILE_NAME` on macOS) command to generate
 CERTIFICATE_BASE64_STRING=''
 CERTIFICATE_PASSWORD=''
+UPLOAD_CERTIFICATE='true'

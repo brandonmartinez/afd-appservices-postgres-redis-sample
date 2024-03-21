@@ -1,24 +1,18 @@
 // Parameters
 //////////////////////////////////////////////////
-@description('The current datetime.')
-param currentDateTime string = utcNow('yyyMMddTHmm')
-
 @description('The Azure region of the resources.')
 param location string
 
-@description('Parameters specific to the networking module.')
-param networkingModuleParameters object
+@description('Parameters specific to this module.')
+param parameters object
 
 @description('Tags to associate with the resources.')
 param tags object
 
-@description('The public IP address to be used in allowing access to Azure services via Bastion.')
-param publicIpAddress string
-
 // Resources
 //////////////////////////////////////////////////
 resource natGatewayPublicIpPrefix 'Microsoft.Network/publicIPPrefixes@2022-09-01' = {
-  name: networkingModuleParameters.natGatewayPublicIpPrefixName
+  name: parameters.natGatewayPublicIpPrefixName
   location: location
   tags: tags
   sku: {
@@ -31,7 +25,7 @@ resource natGatewayPublicIpPrefix 'Microsoft.Network/publicIPPrefixes@2022-09-01
 }
 
 resource natGateway 'Microsoft.Network/natGateways@2022-09-01' = {
-  name: networkingModuleParameters.natGatewayName
+  name: parameters.natGatewayName
   location: location
   tags: tags
   sku: {
@@ -48,7 +42,7 @@ resource natGateway 'Microsoft.Network/natGateways@2022-09-01' = {
 }
 
 resource bastionNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2022-09-01' = {
-  name: networkingModuleParameters.bastionNetworkSecurityGroupName
+  name: parameters.bastionNetworkSecurityGroupName
   location: location
   tags: tags
   properties: {
@@ -60,7 +54,7 @@ resource bastionNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@20
           protocol: 'Tcp'
           sourcePortRange: '*'
           destinationPortRange: '443'
-          sourceAddressPrefix: publicIpAddress
+          sourceAddressPrefix: parameters.publicIpAddress
           destinationAddressPrefix: '*'
           access: 'Allow'
           priority: 100
@@ -117,35 +111,35 @@ resource bastionNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@20
 }
 
 resource vnetIntegrationNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2022-09-01' = {
-  name: networkingModuleParameters.vnetIntegrationNetworkSecurityGroupName
+  name: parameters.vnetIntegrationNetworkSecurityGroupName
   location: location
   tags: tags
 }
 
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
-  name: networkingModuleParameters.virtualNetworkName
+  name: parameters.virtualNetworkName
   location: location
   tags: tags
   properties: {
     addressSpace: {
       addressPrefixes: [
-        networkingModuleParameters.virtualNetworkPrefix
+        parameters.virtualNetworkPrefix
       ]
     }
     subnets: [
       {
-        name: networkingModuleParameters.bastionSubnetName
+        name: parameters.bastionSubnetName
         properties: {
-          addressPrefix: networkingModuleParameters.bastionSubnetAddressPrefix
+          addressPrefix: parameters.bastionSubnetAddressPrefix
           networkSecurityGroup: {
             id: bastionNetworkSecurityGroup.id
           }
         }
       }
       {
-        name: networkingModuleParameters.appServicesSubnetName
+        name: parameters.appServicesSubnetName
         properties: {
-          addressPrefix: networkingModuleParameters.appServicesSubnetAddressPrefix
+          addressPrefix: parameters.appServicesSubnetAddressPrefix
           natGateway: {
             id: natGateway.id
           }
@@ -171,12 +165,20 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
 }
 
 module bastion './networking-bastion.bicep' = {
-  name: 'az-bastion-${currentDateTime}'
+  name: parameters.bastionDeploymentName
   params: {
     location: location
-    networkingModuleParameters: networkingModuleParameters
+    parameters: parameters
     tags: tags
     bastionSubnetId: virtualNetwork::bastionSubnet.id
+  }
+}
+
+module frontDoor './networking-frontdoor.bicep' = {
+  name: parameters.frontDoorDeploymentName
+  params: {
+    parameters: parameters
+    tags: tags
   }
 }
 

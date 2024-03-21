@@ -4,7 +4,7 @@
 param location string
 
 @description('Parameters specific to the security module.')
-param securityModuleParameters object
+param parameters object
 
 @description('Tags to associate with the resources.')
 param tags object
@@ -12,19 +12,19 @@ param tags object
 // Resources
 //////////////////////////////////////////////////
 resource frontDoorManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: securityModuleParameters.frontDoorManagedIdentityName
+  name: parameters.frontDoorManagedIdentityName
   location: location
   tags: tags
 }
 
 resource virtualMachineManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: securityModuleParameters.virtualMachineManagedIdentityName
+  name: parameters.virtualMachineManagedIdentityName
   location: location
   tags: tags
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
-  name: securityModuleParameters.keyVaultName
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+  name: parameters.keyVaultName
   location: location
   tags: tags
   properties: {
@@ -46,18 +46,18 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
 
 resource certificateBase64StringSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' = {
   parent: keyVault
-  name: securityModuleParameters.certificateSecretName
+  name: parameters.certificateSecretName
   properties: {
-    value: securityModuleParameters.certificateBase64String
+    value: parameters.certificateBase64String
     contentType: 'application/x-pkcs12'
   }
 }
 
 resource resourcePasswordSecret 'Microsoft.KeyVault/vaults/secrets@2022-11-01' = {
   parent: keyVault
-  name: securityModuleParameters.resourcePasswordSecretName
+  name: parameters.resourcePasswordSecretName
   properties: {
-    value: securityModuleParameters.resourcePassword
+    value: parameters.resourcePassword
   }
 }
 
@@ -70,7 +70,7 @@ resource accessPolicy 'Microsoft.KeyVault/vaults/accessPolicies@2023-02-01' = {
         objectId: frontDoorManagedIdentity.properties.principalId
         tenantId: subscription().tenantId
         permissions: {
-          certificates: ['get']
+          certificates: ['get', 'import']
           keys: ['get', 'unwrapKey', 'wrapKey']
           secrets: ['get']
         }
@@ -84,6 +84,48 @@ resource accessPolicy 'Microsoft.KeyVault/vaults/accessPolicies@2023-02-01' = {
         }
       }
     ]
+  }
+}
+
+resource deploymentScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = if(parameters.uploadCertificate == 'true') {
+  name: '${parameters.certificateSecretName}-importCertificate'
+  dependsOn: [
+    accessPolicy
+  ]
+  kind: 'AzureCLI'
+  location: location
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${frontDoorManagedIdentity.id}': {}
+    }
+  }
+  properties: {
+    azCliVersion: '2.54.0'
+    scriptContent: '''
+      echo "$CERTIFICATE_BASE64" | base64 -d > certificate.pfx
+      az keyvault certificate import --vault-name "$KEY_VAULT_NAME" --name "$CERTIFICATE_NAME" --file certificate.pfx --password "$CERTIFICATE_PASSWORD"
+    '''
+    environmentVariables: [
+      {
+        name: 'KEY_VAULT_NAME'
+        value: keyVault.name
+      }
+      {
+        name: 'CERTIFICATE_BASE64'
+        value: parameters.certificateBase64String
+      }
+      {
+        name: 'CERTIFICATE_NAME'
+        value: parameters.certificateCertificateName
+      }
+      {
+        name: 'CERTIFICATE_PASSWORD'
+        value: parameters.certificatePassword
+      }
+    ]
+    timeout: 'PT5M'
+    retentionInterval: 'P1D'
   }
 }
 

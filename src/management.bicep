@@ -3,8 +3,8 @@
 @description('The Azure region of the resources.')
 param location string
 
-@description('Parameters specific to the management module.')
-param managementModuleParameters object
+@description('Parameters specific to this module.')
+param parameters object
 
 @description('Tags to associate with the resources.')
 param tags object
@@ -12,7 +12,7 @@ param tags object
 // Resources
 //////////////////////////////////////////////////
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
-  name: managementModuleParameters.logAnalyticsWorkspaceName
+  name: parameters.logAnalyticsWorkspaceName
   location: location
   tags: tags
   properties: {
@@ -24,7 +24,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10
 }
 
 resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
-  name: managementModuleParameters.applicationInsightsName
+  name: parameters.applicationInsightsName
   location: location
   tags: tags
   kind: 'web'

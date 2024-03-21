@@ -3,8 +3,8 @@
 @description('The Azure region of the resources.')
 param location string
 
-@description('Parameters specific to the networking module.')
-param networkingModuleParameters object
+@description('Parameters specific to this module.')
+param parameters object
 
 @description('Tags to associate with the resources.')
 param tags object
@@ -15,7 +15,7 @@ param bastionSubnetId string
 // Resources
 //////////////////////////////////////////////////
 resource bastionPublicIpAddress 'Microsoft.Network/publicIPAddresses@2022-09-01' = {
-  name: networkingModuleParameters.bastionPublicIpAddressName
+  name: parameters.bastionPublicIpAddressName
   location: location
   tags: tags
   properties: {
@@ -28,7 +28,7 @@ resource bastionPublicIpAddress 'Microsoft.Network/publicIPAddresses@2022-09-01'
 }
 
 resource bastion 'Microsoft.Network/bastionHosts@2022-09-01' = {
-  name: networkingModuleParameters.bastionName
+  name: parameters.bastionName
   location: location
   tags: tags
   properties: {
