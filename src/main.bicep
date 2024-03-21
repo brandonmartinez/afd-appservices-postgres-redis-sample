@@ -2,6 +2,7 @@
 //////////////////////////////////////////////////
 @description('The Azure region of the resources.')
 param location string = resourceGroup().location
+param conditionalDeployment object
 param managementModuleParameters object
 param securityModuleParameters object
 param networkingModuleParameters object
@@ -9,7 +10,7 @@ param tags object
 
 // Modules and Resources
 //////////////////////////////////////////////////
-module management './management.bicep' = {
+module management './management.bicep' = if(conditionalDeployment.deployManagement == 'true') {
   name: managementModuleParameters.deploymentName
   params: {
     location: location
@@ -18,7 +19,7 @@ module management './management.bicep' = {
   }
 }
 
-module security './security.bicep' = {
+module security './security.bicep' = if(conditionalDeployment.deploySecurity == 'true') {
   name: securityModuleParameters.deploymentName
   params: {
     location: location
@@ -27,7 +28,7 @@ module security './security.bicep' = {
   }
 }
 
-module networking './networking.bicep' = {
+module networking './networking.bicep' = if(conditionalDeployment.deployNetworking == 'true') {
   name: networkingModuleParameters.deploymentName
   dependsOn: [
     // wait for security as we need certs and identities setup

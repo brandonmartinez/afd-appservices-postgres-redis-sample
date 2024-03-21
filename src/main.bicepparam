@@ -8,6 +8,9 @@ var currentDateTime = readEnvironmentVariable('CURRENT_DATE_TIME', '')
 var publicIpAddress = readEnvironmentVariable('PUBLIC_IP_ADDRESS', '')
 var rootDomain = readEnvironmentVariable('ROOT_DOMAIN', '')
 var uploadCertificate = readEnvironmentVariable('UPLOAD_CERTIFICATE', 'true')
+var deployManagement = readEnvironmentVariable('DEPLOY_MANAGEMENT', 'true')
+var deploySecurity = readEnvironmentVariable('DEPLOY_SECURITY', 'true')
+var deployNetworking = readEnvironmentVariable('DEPLOY_NETWORKING', 'true')
 
 // Note: it's not generally recommended to store passwords here, use key vault instead
 // https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/key-vault-parameter
@@ -36,6 +39,12 @@ param location = readEnvironmentVariable('AZURE_LOCATION', '')
 param tags = {
   deploymentDate: currentDateTime
   environment: appenv
+}
+
+param conditionalDeployment = {
+  deployManagement: deployManagement
+  deploySecurity: deploySecurity
+  deployNetworking: deployNetworking
 }
 
 param managementModuleParameters = {

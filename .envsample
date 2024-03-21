@@ -16,4 +16,10 @@ ROOT_DOMAIN=''
 # Use `base64 -w 0 FILE_NAME` (or `base64 -i FILE_NAME` on macOS) command to generate
 CERTIFICATE_BASE64_STRING=''
 CERTIFICATE_PASSWORD=''
+
+# Conditional Deployments (for debugging)
+##################################################
 UPLOAD_CERTIFICATE='true'
+DEPLOY_MANAGEMENT='true'
+DEPLOY_SECURITY='true'
+DEPLOY_NETWORKING='true'

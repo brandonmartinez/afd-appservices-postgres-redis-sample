@@ -33,7 +33,7 @@ resource originGroup 'Microsoft.Cdn/profiles/originGroups@2021-06-01' = {
       successfulSamplesRequired: 3
     }
     healthProbeSettings: {
-      probePath: parameters.healthProbePath
+      probePath: parameters.originGroupHealthProbePath
       probeRequestType: 'HEAD'
       probeProtocol: 'Https'
       probeIntervalInSeconds: 100
