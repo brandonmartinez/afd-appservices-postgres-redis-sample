@@ -154,6 +154,10 @@ var dataVariables = {
   postgresServerSkuTier: 'Burstable'
   postgresServerStorageSize: 128
   postgresServerVersion: '16'
+
+  // Storage Variables
+  storageName: storageName
+  storageHostName: storageHostName
 }
 
 var computeVariables = {
@@ -161,14 +165,6 @@ var computeVariables = {
 
   // General Variables
   virtualNetworkName: networkingVariables.virtualNetworkName
-
-  postgresServerAdminPassword: resourcePassword
-  postgresServerAdminUsername: resourceUserName
-
-  postgresServerSkuName: 'Standard_B1ms'
-  postgresServerSkuTier: 'Burstable'
-  postgresServerStorageSize: 128
-  postgresServerVersion: '16'
 
   // App Service Variables
   appServicePlanName: 'plan-${appenv}'
@@ -181,10 +177,6 @@ var computeVariables = {
 
   postgresManagedIdentityName: securityVariables.postgresManagedIdentityName
   postgresServerName: dataVariables.postgresServerName
-
-  // Storage Variables
-  storageName: storageName
-  storageHostName: storageHostName
 
   // Redis Variables
 

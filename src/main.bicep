@@ -82,6 +82,23 @@ module compute 'compute.bicep' =
 
 // Outputs
 //////////////////////////////////////////////////
+var generatedOutputs = {
+  // Management Module Outputs
+  logAnalyticsWorkspaceId: (conditionalDeployment.deployManagement == 'true')
+    ? management.outputs.logAnalyticsWorkspaceId
+    : ''
+  applicationInsightsId: (conditionalDeployment.deployManagement == 'true')
+    ? management.outputs.applicationInsightsId
+    : ''
+  applicationInsightsConnectionString: (conditionalDeployment.deployManagement == 'true')
+    ? management.outputs.applicationInsightsConnectionString
+    : ''
+
+  // Networking Module Outputs
+  natGatewayId: (conditionalDeployment.deployNetworking == 'true') ? networking.outputs.natGatewayId : ''
+}
+
+output generatedOutputs object = generatedOutputs
 
 // Passed in configuration
 // NOTE: this contains secure info and should not be output in a real environment
@@ -91,16 +108,3 @@ output networkingParameters object = networkingModuleParameters
 output dataModuleParameters object = dataModuleParameters
 output computeModuleParameters object = computeModuleParameters
 
-// Management Module Outputs
-output logAnalyticsWorkspaceId string = (conditionalDeployment.deployManagement == 'true')
-  ? management.outputs.logAnalyticsWorkspaceId
-  : ''
-output applicationInsightsId string = (conditionalDeployment.deployManagement == 'true')
-  ? management.outputs.applicationInsightsId
-  : ''
-output applicationInsightsConnectionString string = (conditionalDeployment.deployManagement == 'true')
-  ? management.outputs.applicationInsightsConnectionString
-  : ''
-
-// Networking Module Outputs
-output natGatewayId string = (conditionalDeployment.deployNetworking == 'true') ? networking.outputs.natGatewayId : ''

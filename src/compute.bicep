@@ -48,14 +48,16 @@ resource webAppAppService 'Microsoft.Web/sites@2023-01-01' = {
   properties: {
     serverFarmId: appServicePlan.id
     virtualNetworkSubnetId: virtualNetwork::appservicesSubnet.id
+    vnetRouteAllEnabled: true
+    httpsOnly: true
     siteConfig: {
-      vnetRouteAllEnabled: true
       linuxFxVersion: 'DOCKER|dpage/pgadmin4:latest'
       alwaysOn: true
       connectionStrings: [
         {
           connectionString: '${parameters.postgresServerName}.postgres.database.azure.com'
           type: 'PostgreSQL'
+          name: 'PostgresConnectionString'
         }
       ]
       appSettings: [

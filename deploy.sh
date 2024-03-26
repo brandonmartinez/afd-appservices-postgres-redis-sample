@@ -66,7 +66,7 @@ output=$(az deployment group create \
     --query 'properties.outputs')
 
 # Echo output to the log for easy access to the deployment outputs
-$(echo "$output" | jq --raw-output 'to_entries[] | (.key + "=" + .value.value)' | while IFS= read -r line; do debug "$line"; done)
+$(echo "$output" | jq --raw-output 'to_entries[] | .value.value' | while IFS= read -r line; do debug "$line"; done)
 
 section "Azure infrastructure deployment completed"
 info "For more information, open .logs/logs.txt"
