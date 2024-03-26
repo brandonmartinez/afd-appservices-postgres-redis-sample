@@ -179,6 +179,9 @@ module redisPrivateEndpoint 'private-endpoint.bicep' = {
   params: {
     baseName: redisCache.name
     dnsZoneName: 'privatelink.redis.cache.windows.net'
+    groupIds: [
+      'redisCache'
+    ]
     location: location
     serviceId: redisCache.id
     subnetId: virtualNetwork::redisSubnet.id

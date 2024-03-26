@@ -4,7 +4,7 @@ param baseName string
 
 param dnsZoneName string
 
-param groupIds array = []
+param groupIds array
 
 @description('The Azure region of the resources.')
 param location string
