@@ -3,8 +3,14 @@
 @description('The Profile Name from Front Door.')
 param profileName string
 
+@description('The DNS Zone Name from Front Door.')
+param dnsZoneName string
+
 @description('The Endpoint Name from Front Door.')
 param endpointName string
+
+@description('The Host Name of the Endpoint from Front Door.')
+param endpointHostName string
 
 @secure()
 @description('The Certificate Secret Id from Front Door.')
@@ -95,5 +101,15 @@ resource route 'Microsoft.Cdn/profiles/afdEndpoints/routes@2021-06-01' = {
     forwardingProtocol: 'MatchRequest'
     linkToDefaultDomain: 'Disabled'
     httpsRedirect: 'Enabled'
+  }
+}
+
+resource dnsCnameRecord 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = {
+  name: '${dnsZoneName}/${parameters.customDomainPrefix}'
+  properties: {
+    TTL: 3600
+    CNAMERecord: {
+      cname: endpointHostName
+    }
   }
 }

@@ -102,7 +102,9 @@ module frontDoorSites 'networking-frontdoor-site.bicep' = [
     name: replace(parameters.frontDoorSitesDeploymentNameTemplate, '$NUMBER', string(i))
     params: {
       profileName: parameters.frontDoorProfileName
+      dnsZoneName: parameters.dnsZoneName
       endpointName: parameters.frontDoorEndpointName
+      endpointHostName: endpoint.properties.hostName
       certificateSecretId: frontDoorCertificateSecret.id
       parameters: site
     }

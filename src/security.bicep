@@ -17,6 +17,18 @@ resource frontDoorManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentit
   tags: tags
 }
 
+resource appServiceManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: parameters.appServiceManagedIdentityName
+  location: location
+  tags: tags
+}
+
+resource postgresManagedIdentityName 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: parameters.postgresManagedIdentityName
+  location: location
+  tags: tags
+}
+
 resource virtualMachineManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: parameters.virtualMachineManagedIdentityName
   location: location
@@ -77,6 +89,14 @@ resource accessPolicy 'Microsoft.KeyVault/vaults/accessPolicies@2023-02-01' = {
       }
       {
         objectId: virtualMachineManagedIdentity.properties.principalId
+        tenantId: subscription().tenantId
+        permissions: {
+          certificates: ['get']
+          secrets: ['get']
+        }
+      }
+      {
+        objectId: appServiceManagedIdentity.properties.principalId
         tenantId: subscription().tenantId
         permissions: {
           certificates: ['get']

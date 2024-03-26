@@ -8,9 +8,8 @@ var currentDateTime = readEnvironmentVariable('CURRENT_DATE_TIME', '')
 var publicIpAddress = readEnvironmentVariable('PUBLIC_IP_ADDRESS', '')
 var rootDomain = readEnvironmentVariable('ROOT_DOMAIN', '')
 var uploadCertificate = readEnvironmentVariable('UPLOAD_CERTIFICATE', 'true')
-var deployManagement = readEnvironmentVariable('DEPLOY_MANAGEMENT', 'true')
-var deploySecurity = readEnvironmentVariable('DEPLOY_SECURITY', 'true')
-var deployNetworking = readEnvironmentVariable('DEPLOY_NETWORKING', 'true')
+var resourceUserName = readEnvironmentVariable('AZURE_RESOURCE_USERNAME', 'bicep')
+var resourceEmail = readEnvironmentVariable('AZURE_RESOURCE_EMAIL', 'bicep')
 
 // Note: it's not generally recommended to store passwords here, use key vault instead
 // https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/key-vault-parameter
@@ -22,32 +21,20 @@ var certificatePassword = readEnvironmentVariable('CERTIFICATE_PASSWORD', '')
 var appServiceWebAppName = 'app-${appenv}-webapp'
 var appServiceWebAppHostName = '${appServiceWebAppName}.azurewebsites.net'
 var storageName = replace('sa-${appenv}-web', '-', '')
+
+var conditionalVariables = {
+  deployManagement: readEnvironmentVariable('DEPLOY_MANAGEMENT', 'true')
+  deploySecurity: readEnvironmentVariable('DEPLOY_SECURITY', 'true')
+  deployNetworking: readEnvironmentVariable('DEPLOY_NETWORKING', 'true')
+  deployComputeAndData: readEnvironmentVariable('DEPLOY_COMPUTE_AND_DATA', 'true')
+}
+
+// TODO: when there's support for environment(), use that
 // var storageHostName = '${storageName}.blob.${environment().suffixes.storage}'
 #disable-next-line no-hardcoded-env-urls
 var storageHostName = '${storageName}.blob.core.windows.net'
-var keyVaultName = 'kv-${appenv}'
-var certificateSecretName = 'secret-cert-${appenv}'
-var certificateCertificateName = 'certificate-${appenv}'
-var frontDoorManagedIdentityName = 'id-${appenv}-frontdoor'
 
-// Parameters
-//////////////////////////////////////////////////
-param location = readEnvironmentVariable('AZURE_LOCATION', '')
-
-// Module Parameters
-//////////////////////////////////////////////////
-param tags = {
-  deploymentDate: currentDateTime
-  environment: appenv
-}
-
-param conditionalDeployment = {
-  deployManagement: deployManagement
-  deploySecurity: deploySecurity
-  deployNetworking: deployNetworking
-}
-
-param managementModuleParameters = {
+var managementVariables = {
   deploymentName: 'az-management-${currentDateTime}'
 
   // Log Analytics Workspace Variables
@@ -57,36 +44,37 @@ param managementModuleParameters = {
   applicationInsightsName: 'appinsights-${appenv}'
 }
 
-param securityModuleParameters = {
+var securityVariables = {
   deploymentName: 'az-security-${currentDateTime}'
 
   // Managed Identity Variables
-  frontDoorManagedIdentityName: frontDoorManagedIdentityName
+  frontDoorManagedIdentityName: 'id-${appenv}-frontdoor'
+  appServiceManagedIdentityName: 'id-${appenv}-appservice'
+  postgresManagedIdentityName: 'id-${appenv}-postgres'
   virtualMachineManagedIdentityName: 'id-${appenv}-virtualmachine'
 
   // Key Vault Variables
-  keyVaultName: keyVaultName
+  keyVaultName: 'kv-${appenv}'
   certificateBase64String: certificateBase64String
-  certificateCertificateName: certificateCertificateName
+  certificateCertificateName: 'certificate-${appenv}'
   certificatePassword: certificatePassword
-  certificateSecretName: certificateSecretName
+  certificateSecretName: 'secret-cert-${appenv}'
   resourcePassword: resourcePassword
   resourcePasswordSecretName: 'password-${appenv}'
   uploadCertificate: uploadCertificate
 }
 
-param networkingModuleParameters = {
+var networkingVariables = {
   deploymentName: 'az-networking-${currentDateTime}'
   bastionDeploymentName: 'az-bastion-${currentDateTime}'
-  frontDoorManagedIdentityName: frontDoorManagedIdentityName
   frontDoorDeploymentName: 'az-frontdoor-${currentDateTime}'
   frontDoorSitesDeploymentNameTemplate: 'az-frontdoor-site$NUMBER-${currentDateTime}'
 
   // General Variables
   publicIpAddress: publicIpAddress
-  keyVaultName: keyVaultName
-  certificateSecretName: certificateSecretName
-  certificateCertificateName: certificateCertificateName
+  keyVaultName: securityVariables.keyVaultName
+  certificateSecretName: securityVariables.certificateSecretName
+  certificateCertificateName: securityVariables.certificateCertificateName
 
   // NSG Variables
   bastionNetworkSecurityGroupName: 'nsg-${appenv}-bastion'
@@ -105,17 +93,23 @@ param networkingModuleParameters = {
   appServicesSubnetAddressPrefix: '10.0.1.0/24'
   bastionSubnetName: 'AzureBastionSubnet' // Must be this name: https://learn.microsoft.com/en-us/azure/bastion/configuration-settings#subnet
   bastionSubnetAddressPrefix: '10.0.200.0/24'
+  postgresSubnetName: 'postgres'
+  postgresSubnetAddressPrefix: '10.0.2.0/24'
+
+  // DNS Variables
+  dnsZoneName: rootDomain
 
   // Bastion Variables
   bastionPublicIpAddressName: 'pip-${appenv}-bastion'
   bastionName: 'bastion-${appenv}'
 
   // Front Door Variables
-  frontDoorWafPolicyName: replace('wafpolicy-${appenv}', '-', '')
-  frontDoorProfileName: 'afd-${appenv}'
-  frontDoorEndpointName: 'fde-${appenv}'
-  frontDoorSecurityPolicyName: 'securitypolicy-${appenv}'
   frontDoorCertificateSecretName: 'secret-${appenv}-certificate'
+  frontDoorEndpointName: 'fde-${appenv}'
+  frontDoorManagedIdentityName: securityVariables.frontDoorManagedIdentityName
+  frontDoorProfileName: 'afd-${appenv}'
+  frontDoorSecurityPolicyName: 'securitypolicy-${appenv}'
+  frontDoorWafPolicyName: replace('wafpolicy-${appenv}', '-', '')
 
   frontDoorSites: [
     {
@@ -125,6 +119,7 @@ param networkingModuleParameters = {
       originHostName: appServiceWebAppHostName
       customDomainName: 'domainname-${appenv}-webapp'
       customDomain: 'www.${rootDomain}'
+      customDomainPrefix: 'www'
       routeName: 'route-${appenv}-webapp'
     }
     {
@@ -134,7 +129,67 @@ param networkingModuleParameters = {
       originHostName: storageHostName
       customDomainName: 'domainname-${appenv}-storage'
       customDomain: 'assets.${rootDomain}'
+      customDomainPrefix: 'assets'
       routeName: 'route-${appenv}-storage'
     }
   ]
 }
+
+var computeAndDataVariables = {
+  deploymentName: 'az-computeanddata-${currentDateTime}'
+  postgressAdminUserDeploymentName: 'az-computeanddata-admin-${currentDateTime}'
+
+  // General Variables
+  virtualNetworkName: networkingVariables.virtualNetworkName
+
+  // Postgres Variables
+  postgresManagedIdentityName: securityVariables.postgresManagedIdentityName
+  postgresSubnetName: 'postgres'
+
+  postgresServerAdminPassword: resourcePassword
+  postgresServerAdminUsername: resourceUserName
+  postgresServerName: 'pgdb-${appenv}-server'
+  postgresServerSkuName: 'Standard_B1ms'
+  postgresServerSkuTier: 'Burstable'
+  postgresServerStorageSize: 128
+  postgresServerVersion: '16'
+
+  // App Service Variables
+  appServicePlanName: 'plan-${appenv}'
+  appServiceWebAppName: appServiceWebAppName
+  appServiceWebAppHostName: appServiceWebAppHostName
+  appServiceManagedIdentityName: securityVariables.appServiceManagedIdentityName
+  appServicesSubnetName: networkingVariables.appServicesSubnetName
+  appServicePgAdminEmail: resourceEmail
+  appServicePgAdminPassword: resourcePassword
+
+  // Storage Variables
+  storageName: storageName
+  storageHostName: storageHostName
+
+  // Redis Variables
+
+  // Virtual Machine Variables
+
+}
+
+// Parameters
+//////////////////////////////////////////////////
+param location = readEnvironmentVariable('AZURE_LOCATION', '')
+
+// Module Parameters
+//////////////////////////////////////////////////
+param tags = {
+  deploymentDate: currentDateTime
+  environment: appenv
+}
+
+param conditionalDeployment = conditionalVariables
+
+param managementModuleParameters = managementVariables
+
+param securityModuleParameters = securityVariables
+
+param networkingModuleParameters = networkingVariables
+
+param computeAndDataModuleParameters = computeAndDataVariables

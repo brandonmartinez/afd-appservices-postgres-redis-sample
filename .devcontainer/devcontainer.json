@@ -12,7 +12,9 @@
 		"vscode": {
 			"extensions": [
 				"ms-azuretools.vscode-bicep",
-				"ms-azuretools.vscode-azureresourcegroups"
+				"hediet.vscode-drawio",
+				"esbenp.prettier-vscode",
+				"GitHub.copilot"
 			]
 		}
 	}

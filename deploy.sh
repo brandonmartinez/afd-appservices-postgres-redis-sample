@@ -55,6 +55,7 @@ debug "Manually building the bicep template, as there are some cross-platform is
 az bicep build --file "$SRC_DIR/main.bicep" --outdir "$TEMP_DIR"
 az bicep build-params --file "$SRC_DIR/main.bicepparam" --outfile "$TEMP_DIR/main.parameters.json"
 
+# TODO: use stacks instead of deployment
 AZ_DEPLOYMENT_NAME="az-main-$CURRENT_DATE_TIME"
 output=$(az deployment group create \
     -n "$AZ_DEPLOYMENT_NAME" \

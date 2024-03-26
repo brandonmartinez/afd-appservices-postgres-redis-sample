@@ -116,7 +116,7 @@ resource vnetIntegrationNetworkSecurityGroup 'Microsoft.Network/networkSecurityG
   tags: tags
 }
 
-resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-09-01' = {
   name: parameters.virtualNetworkName
   location: location
   tags: tags
@@ -157,11 +157,34 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
           privateEndpointNetworkPolicies: 'Enabled'
         }
       }
+      {
+        name: parameters.postgresSubnetName
+        properties: {
+          addressPrefix: parameters.postgresSubnetAddressPrefix
+          delegations: [
+            {
+              name: 'postgresDelegation'
+              properties: {
+                serviceName: 'Microsoft.DBforPostgreSQL/flexibleServers'
+              }
+            }
+          ]
+          networkSecurityGroup: {
+            id: vnetIntegrationNetworkSecurityGroup.id
+          }
+          privateEndpointNetworkPolicies: 'Enabled'
+        }
+      }
     ]
   }
   resource bastionSubnet 'subnets' existing = {
     name: 'AzureBastionSubnet'
   }
+}
+
+resource dnsZone 'Microsoft.Network/dnsZones@2018-05-01' = {
+  name: parameters.dnsZoneName
+  location: 'global'
 }
 
 module bastion './networking-bastion.bicep' = {
