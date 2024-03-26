@@ -6,54 +6,79 @@ param conditionalDeployment object
 param managementModuleParameters object
 param securityModuleParameters object
 param networkingModuleParameters object
-param computeAndDataModuleParameters object
+param dataModuleParameters object
+param computeModuleParameters object
 param tags object
 
 // Modules and Resources
 //////////////////////////////////////////////////
-module management './management.bicep' = if(conditionalDeployment.deployManagement == 'true') {
-  name: managementModuleParameters.deploymentName
-  params: {
-    location: location
-    tags: tags
-    parameters: managementModuleParameters
+module management './management.bicep' =
+  if (conditionalDeployment.deployManagement == 'true') {
+    name: managementModuleParameters.deploymentName
+    params: {
+      location: location
+      tags: tags
+      parameters: managementModuleParameters
+    }
   }
-}
 
-module security './security.bicep' = if(conditionalDeployment.deploySecurity == 'true') {
-  name: securityModuleParameters.deploymentName
-  params: {
-    location: location
-    tags: tags
-    parameters: securityModuleParameters
+module security './security.bicep' =
+  if (conditionalDeployment.deploySecurity == 'true') {
+    name: securityModuleParameters.deploymentName
+    params: {
+      location: location
+      tags: tags
+      parameters: securityModuleParameters
+    }
   }
-}
 
-module networking './networking.bicep' = if(conditionalDeployment.deployNetworking == 'true') {
-  name: networkingModuleParameters.deploymentName
-  dependsOn: [
-    // wait for security as we need certs and identities setup
-    security
-  ]
-  params: {
-    location: location
-    tags: tags
-    parameters: networkingModuleParameters
+module networking './networking.bicep' =
+  if (conditionalDeployment.deployNetworking == 'true') {
+    name: networkingModuleParameters.deploymentName
+    dependsOn: (conditionalDeployment.deploySecurity == 'true')
+      ? [
+          // wait for networking as we need the vnet and subnet
+          security
+        ]
+      : []
+    params: {
+      location: location
+      tags: tags
+      parameters: networkingModuleParameters
+    }
   }
-}
 
-module computeAndData 'compute-and-data.bicep' = if(conditionalDeployment.deployComputeAndData == 'true') {
-  name: computeAndDataModuleParameters.deploymentName
-  dependsOn: [
-    // wait for networking as we need the vnet and subnet
-    networking
-  ]
-  params: {
-    location: location
-    tags: tags
-    parameters: computeAndDataModuleParameters
+module data 'data.bicep' =
+  if (conditionalDeployment.deployData == 'true') {
+    name: dataModuleParameters.deploymentName
+    dependsOn: (conditionalDeployment.deployNetworking == 'true')
+      ? [
+          // wait for networking as we need the vnet and subnet
+          networking
+        ]
+      : []
+    params: {
+      location: location
+      tags: tags
+      parameters: dataModuleParameters
+    }
   }
-}
+
+module compute 'compute.bicep' =
+  if (conditionalDeployment.deployCompute == 'true') {
+    name: computeModuleParameters.deploymentName
+    dependsOn: (conditionalDeployment.deployNetworking == 'true')
+      ? [
+          // wait for networking as we need the vnet and subnet
+          networking
+        ]
+      : []
+    params: {
+      location: location
+      tags: tags
+      parameters: computeModuleParameters
+    }
+  }
 
 // Outputs
 //////////////////////////////////////////////////
@@ -63,12 +88,19 @@ module computeAndData 'compute-and-data.bicep' = if(conditionalDeployment.deploy
 output managementParameters object = managementModuleParameters
 output securityParameters object = securityModuleParameters
 output networkingParameters object = networkingModuleParameters
-output computeAndDataModuleParameters object = computeAndDataModuleParameters
+output dataModuleParameters object = dataModuleParameters
+output computeModuleParameters object = computeModuleParameters
 
 // Management Module Outputs
-output logAnalyticsWorkspaceId string = management.outputs.logAnalyticsWorkspaceId
-output applicationInsightsId string = management.outputs.applicationInsightsId
-output applicationInsightsConnectionString string = management.outputs.applicationInsightsConnectionString
+output logAnalyticsWorkspaceId string = (conditionalDeployment.deployManagement == 'true')
+  ? management.outputs.logAnalyticsWorkspaceId
+  : ''
+output applicationInsightsId string = (conditionalDeployment.deployManagement == 'true')
+  ? management.outputs.applicationInsightsId
+  : ''
+output applicationInsightsConnectionString string = (conditionalDeployment.deployManagement == 'true')
+  ? management.outputs.applicationInsightsConnectionString
+  : ''
 
 // Networking Module Outputs
-output natGatewayId string = networking.outputs.natGatewayId
+output natGatewayId string = (conditionalDeployment.deployNetworking == 'true') ? networking.outputs.natGatewayId : ''

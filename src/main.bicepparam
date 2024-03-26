@@ -26,7 +26,8 @@ var conditionalVariables = {
   deployManagement: readEnvironmentVariable('DEPLOY_MANAGEMENT', 'true')
   deploySecurity: readEnvironmentVariable('DEPLOY_SECURITY', 'true')
   deployNetworking: readEnvironmentVariable('DEPLOY_NETWORKING', 'true')
-  deployComputeAndData: readEnvironmentVariable('DEPLOY_COMPUTE_AND_DATA', 'true')
+  deployData: readEnvironmentVariable('DEPLOY_DATA', 'true')
+  deployCompute: readEnvironmentVariable('DEPLOY_COMPUTE', 'true')
 }
 
 // TODO: when there's support for environment(), use that
@@ -135,9 +136,9 @@ var networkingVariables = {
   ]
 }
 
-var computeAndDataVariables = {
-  deploymentName: 'az-computeanddata-${currentDateTime}'
-  postgressAdminUserDeploymentName: 'az-computeanddata-admin-${currentDateTime}'
+var dataVariables = {
+  deploymentName: 'az-data-${currentDateTime}'
+  postgressAdminUserDeploymentName: 'az-data-admin-${currentDateTime}'
 
   // General Variables
   virtualNetworkName: networkingVariables.virtualNetworkName
@@ -153,6 +154,21 @@ var computeAndDataVariables = {
   postgresServerSkuTier: 'Burstable'
   postgresServerStorageSize: 128
   postgresServerVersion: '16'
+}
+
+var computeVariables = {
+  deploymentName: 'az-compute-${currentDateTime}'
+
+  // General Variables
+  virtualNetworkName: networkingVariables.virtualNetworkName
+
+  postgresServerAdminPassword: resourcePassword
+  postgresServerAdminUsername: resourceUserName
+
+  postgresServerSkuName: 'Standard_B1ms'
+  postgresServerSkuTier: 'Burstable'
+  postgresServerStorageSize: 128
+  postgresServerVersion: '16'
 
   // App Service Variables
   appServicePlanName: 'plan-${appenv}'
@@ -162,6 +178,9 @@ var computeAndDataVariables = {
   appServicesSubnetName: networkingVariables.appServicesSubnetName
   appServicePgAdminEmail: resourceEmail
   appServicePgAdminPassword: resourcePassword
+
+  postgresManagedIdentityName: securityVariables.postgresManagedIdentityName
+  postgresServerName: dataVariables.postgresServerName
 
   // Storage Variables
   storageName: storageName
@@ -192,4 +211,6 @@ param securityModuleParameters = securityVariables
 
 param networkingModuleParameters = networkingVariables
 
-param computeAndDataModuleParameters = computeAndDataVariables
+param dataModuleParameters = dataVariables
+
+param computeModuleParameters = computeVariables

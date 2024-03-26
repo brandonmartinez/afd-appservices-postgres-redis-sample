@@ -16,9 +16,6 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-09-01' existing 
   resource postgresSubnet 'subnets@2023-09-01' existing = {
     name: parameters.postgresSubnetName
   }
-  resource appservicesSubnet 'subnets@2023-09-01' existing = {
-    name: parameters.appServicesSubnetName
-  }
 }
 
 resource postgresManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
@@ -29,12 +26,12 @@ resource privateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   name: 'private.postgres.database.azure.com'
   location: 'global'
   resource vNetLink 'virtualNetworkLinks' = {
-      name: '${parameters.postgresServerName}-link'
-      location: 'global'
-      properties: {
-          registrationEnabled: false
-          virtualNetwork: { id: virtualNetwork.id }
-      }
+    name: '${parameters.postgresServerName}-link'
+    location: 'global'
+    properties: {
+      registrationEnabled: false
+      virtualNetwork: { id: virtualNetwork.id }
+    }
   }
 }
 
@@ -49,7 +46,7 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2022-12-01' =
   properties: {
     administratorLogin: parameters.postgresServerAdminUsername
     administratorLoginPassword: parameters.postgresServerAdminPassword
-    authConfig:{
+    authConfig: {
       passwordAuth: 'Enabled'
       activeDirectoryAuth: 'Enabled'
       tenantId: tenant().tenantId
@@ -78,71 +75,11 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2022-12-01' =
   }
 }
 
-module computeAndDataPostgressAdmin 'compute-and-data-postgres-admin.bicep' = {
+module postgresAdminUser 'data-postgres-adminuser.bicep' = {
   name: parameters.postgressAdminUserDeploymentName
   params: {
     managedIdentityName: postgresManagedIdentity.name
     managedIdentityObjectId: postgresManagedIdentity.properties.principalId
     postgresServerName: postgresServer.name
-  }
-}
-
-resource appServiceManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
-  name: parameters.appServiceManagedIdentityName
-}
-
-resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
-  name: parameters.appServicePlanName
-  location: location
-  tags: tags
-  sku: {
-    name: 'P1v3'
-    capacity: 1
-  }
-  kind: 'linux'
-}
-
-resource webAppAppService 'Microsoft.Web/sites@2023-01-01' = {
-  name: parameters.appServiceWebAppName
-  location: location
-  tags: tags
-  properties: {
-    serverFarmId: appServicePlan.id
-    virtualNetworkSubnetId: virtualNetwork::appservicesSubnet.id
-    siteConfig: {
-      vnetRouteAllEnabled: true
-      linuxFxVersion: 'DOCKER|dpage/pgadmin4:latest'
-      alwaysOn: true
-      connectionStrings: [
-        {
-          connectionString: '${postgresServer.name}.postgres.database.azure.com'
-          type: 'PostgreSQL'
-        }
-      ]
-      appSettings: [
-        {
-          name: 'DATABASE_USERNAME'
-          value: computeAndDataPostgressAdmin.outputs.aadUserName
-        }
-        {
-          name: 'PGADMIN_DEFAULT_EMAIL'
-          value: parameters.appServicePgAdminEmail
-        }
-        {
-          name: 'PGADMIN_DEFAULT_PASSWORD'
-          value: parameters.appServicePgAdminPassword
-        }
-        {
-          name: 'PGADMIN_DISABLE_POSTFIX'
-          value: 'True'
-        }
-      ]
-    }
-  }
-  identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${appServiceManagedIdentity.id}': {}
-    }
   }
 }
