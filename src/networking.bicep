@@ -137,6 +137,15 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-09-01' = {
         }
       }
       {
+        name: parameters.virtualMachineSubnetName
+        properties: {
+          addressPrefix: parameters.virtualMachineSubnetAddressPrefix
+          networkSecurityGroup: {
+            id: vnetIntegrationNetworkSecurityGroup.id
+          }
+        }
+      }
+      {
         name: parameters.appServicesSubnetName
         properties: {
           addressPrefix: parameters.appServicesSubnetAddressPrefix

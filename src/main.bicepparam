@@ -182,7 +182,6 @@ var computeVariables = {
 
   // General Variables
   applicationInsightsName: managementVariables.applicationInsightsName
-  logAnalyticsWorkspaceName: managementVariables.logAnalyticsWorkspaceName
   storageAccountName: dataVariables.storageAccountName
   virtualNetworkName: networkingVariables.virtualNetworkName
 

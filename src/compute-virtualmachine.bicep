@@ -17,11 +17,6 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-09-01' existing 
     name: parameters.virtualMachineSubnetName
   }
 }
-
-resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2020-10-01' existing = {
-  name: parameters.logAnalyticsWorkspaceName
-}
-
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' existing = {
   name: parameters.storageAccountName
 }
@@ -100,35 +95,5 @@ resource virtualMachines 'Microsoft.Compute/virtualMachines@2020-12-01' = {
         storageUri: storageAccount.properties.primaryEndpoints.blob
       }
     }
-  }
-}
-
-resource omsAgentForLinux 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' = {
-  parent: virtualMachines
-  name: 'LogAnalytics'
-  location: location
-  properties: {
-    publisher: 'Microsoft.EnterpriseCloud.Monitoring'
-    type: 'OmsAgentForLinux'
-    typeHandlerVersion: '1.13'
-    settings: {
-      workspaceId: logAnalyticsWorkspace.properties.customerId
-      stopOnMultipleConnections: false
-    }
-    protectedSettings: {
-      workspaceKey: logAnalyticsWorkspace.listKeys().primarySharedKey
-    }
-  }
-}
-
-resource omsDependencyAgentForLinux 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' = {
-  parent: virtualMachines
-  name: 'DependencyAgent'
-  location: location
-  properties: {
-    publisher: 'Microsoft.Azure.Monitoring.DependencyAgent'
-    type: 'DependencyAgentLinux'
-    typeHandlerVersion: '9.10'
-    autoUpgradeMinorVersion: true
   }
 }
