@@ -49,9 +49,10 @@ var securityVariables = {
   deploymentName: 'az-security-${currentDateTime}'
 
   // Managed Identity Variables
-  frontDoorManagedIdentityName: 'id-${appenv}-frontdoor'
   appServiceManagedIdentityName: 'id-${appenv}-appservice'
+  frontDoorManagedIdentityName: 'id-${appenv}-frontdoor'
   postgresManagedIdentityName: 'id-${appenv}-postgres'
+  redisManagedIdentityName: 'id-${appenv}-redis'
   virtualMachineManagedIdentityName: 'id-${appenv}-virtualmachine'
 
   // Key Vault Variables
@@ -96,6 +97,8 @@ var networkingVariables = {
   postgresSubnetAddressPrefix: '10.0.2.0/24'
   storageSubnetName: 'storage'
   storageSubnetAddressPrefix: '10.0.3.0/24'
+  redisSubnetName: 'redis'
+  redisSubnetAddressPrefix: '10.0.4.0/24'
   bastionSubnetName: 'AzureBastionSubnet' // Must be this name: https://learn.microsoft.com/en-us/azure/bastion/configuration-settings#subnet
   bastionSubnetAddressPrefix: '10.0.200.0/24'
 
@@ -141,6 +144,8 @@ var networkingVariables = {
 var dataVariables = {
   deploymentName: 'az-data-${currentDateTime}'
   postgressAdminUserDeploymentName: 'az-data-admin-${currentDateTime}'
+  storagePrivateEndpointDeploymentName: 'az-data-storage-pe-${currentDateTime}'
+  redisPrivateEndpointDeploymentName: 'az-data-redis-pe-${currentDateTime}'
 
   // General Variables
   virtualNetworkName: networkingVariables.virtualNetworkName
@@ -161,6 +166,11 @@ var dataVariables = {
   storageAccountName: storageAccountName
   storageAccountHostName: storageAccountHostName
   storageSubnetName: networkingVariables.storageSubnetName
+
+  // Redis Variables
+  redisManagedIdentityName: securityVariables.redisManagedIdentityName
+  redisCacheName: 'redis-${appenv}'
+  redisSubnetName: networkingVariables.redisSubnetName
 }
 
 var computeVariables = {
@@ -181,10 +191,7 @@ var computeVariables = {
   postgresManagedIdentityName: securityVariables.postgresManagedIdentityName
   postgresServerName: dataVariables.postgresServerName
 
-  // Redis Variables
-
   // Virtual Machine Variables
-
 }
 
 // Parameters

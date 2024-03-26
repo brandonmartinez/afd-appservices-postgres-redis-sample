@@ -19,6 +19,9 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-09-01' existing 
   resource storageSubnet 'subnets@2023-09-01' existing = {
     name: parameters.storageSubnetName
   }
+  resource redisSubnet 'subnets@2023-09-01' existing = {
+    name: parameters.redisSubnetName
+  }
 }
 
 resource postgresManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
@@ -133,47 +136,52 @@ resource storageAccountContainer 'Microsoft.Storage/storageAccounts/blobServices
   }
 }
 
-resource storageAccountBlobPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  name: 'privatelink.blob.${environment().suffixes.storage}'
-  location: 'global'
-}
-
-resource storageAccountBlobPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-05-01' = {
-  name: '${storageAccount.name}-blob-pe'
-  location: location
-  properties:{
-    subnet: {
-      id: virtualNetwork::storageSubnet.id
-    }
-    privateLinkServiceConnections: [
-    {
-      name: '${storageAccount.name}-blob-pe-conn'
-      properties: {
-        privateLinkServiceId: storageAccount.id
-        groupIds:[
-          'blob'
-        ]
-        privateLinkServiceConnectionState: {
-          status: 'Approved'
-          actionsRequired: 'None'
-        }
-      }
-    }
+module storagePrivateEndpoint 'private-endpoint.bicep' = {
+  name: parameters.storagePrivateEndpointDeploymentName
+  params: {
+    baseName: '${storageAccount.name}-blob'
+    dnsZoneName: 'privatelink.blob.${environment().suffixes.storage}'
+    groupIds: [
+      'blob'
     ]
+    location: location
+    serviceId: storageAccount.id
+    subnetId: virtualNetwork::storageSubnet.id
+    virtualNetworkId: virtualNetwork.id
   }
 }
 
-resource storageAccountBlobPrivateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-05-01' = {
-  parent: storageAccountBlobPrivateEndpoint
-  name: '${storageAccount.name}-blob-peg'
+resource redisManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
+  name: parameters.redisManagedIdentityName
+}
+
+resource redisCache 'Microsoft.Cache/redis@2023-08-01' = {
+  name: parameters.redisCacheName
+  location: location
   properties: {
-    privateDnsZoneConfigs: [
-      {
-        name: storageAccountBlobPrivateDnsZone.name
-        properties: {
-          privateDnsZoneId: storageAccountBlobPrivateDnsZone.id
-        }
-      }
-    ]
+    sku: {
+      name: 'Basic'
+      family: 'C'
+      capacity: 0
+    }
+    publicNetworkAccess: 'Disabled'
+  }
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${redisManagedIdentity.id}': {}
+    }
+  }
+}
+
+module redisPrivateEndpoint 'private-endpoint.bicep' = {
+  name: parameters.redisPrivateEndpointDeploymentName
+  params: {
+    baseName: redisCache.name
+    dnsZoneName: 'privatelink.redis.cache.windows.net'
+    location: location
+    serviceId: redisCache.id
+    subnetId: virtualNetwork::redisSubnet.id
+    virtualNetworkId: virtualNetwork.id
   }
 }

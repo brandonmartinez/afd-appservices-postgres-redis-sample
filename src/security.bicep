@@ -17,6 +17,12 @@ resource frontDoorManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentit
   tags: tags
 }
 
+resource redisManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: parameters.redisManagedIdentityName
+  location: location
+  tags: tags
+}
+
 resource appServiceManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: parameters.appServiceManagedIdentityName
   location: location

@@ -87,3 +87,4 @@ resource webAppAppService 'Microsoft.Web/sites@2023-01-01' = {
     }
   }
 }
+
