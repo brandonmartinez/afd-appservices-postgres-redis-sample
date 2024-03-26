@@ -14,7 +14,7 @@ param bastionSubnetId string
 
 // Resources
 //////////////////////////////////////////////////
-resource bastionPublicIpAddress 'Microsoft.Network/publicIPAddresses@2022-09-01' = {
+resource bastionPublicIpAddress 'Microsoft.Network/publicIPAddresses@2023-09-01' = {
   name: parameters.bastionPublicIpAddressName
   location: location
   tags: tags
@@ -27,11 +27,19 @@ resource bastionPublicIpAddress 'Microsoft.Network/publicIPAddresses@2022-09-01'
   }
 }
 
-resource bastion 'Microsoft.Network/bastionHosts@2022-09-01' = {
+resource bastion 'Microsoft.Network/bastionHosts@2023-09-01' = {
   name: parameters.bastionName
   location: location
   tags: tags
+  sku: {
+    name: 'Standard'
+  }
   properties: {
+    disableCopyPaste: false
+    enableFileCopy: true
+    enableIpConnect: true
+    enableShareableLink: true
+    enableTunneling: true
     ipConfigurations: [
       {
         name: 'ipConf'

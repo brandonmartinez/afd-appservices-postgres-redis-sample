@@ -99,6 +99,8 @@ var networkingVariables = {
   storageSubnetAddressPrefix: '10.0.3.0/24'
   redisSubnetName: 'redis'
   redisSubnetAddressPrefix: '10.0.4.0/24'
+  virtualMachineSubnetName: 'virtual-machine'
+  virtualMachineSubnetAddressPrefix: '10.0.5.0/24'
   bastionSubnetName: 'AzureBastionSubnet' // Must be this name: https://learn.microsoft.com/en-us/azure/bastion/configuration-settings#subnet
   bastionSubnetAddressPrefix: '10.0.200.0/24'
 
@@ -175,8 +177,13 @@ var dataVariables = {
 
 var computeVariables = {
   deploymentName: 'az-compute-${currentDateTime}'
+  appServicesDeploymentName: 'az-compute-appservices-${currentDateTime}'
+  virtualMachineDeploymentName: 'az-compute-virtualmachine-${currentDateTime}'
 
   // General Variables
+  applicationInsightsName: managementVariables.applicationInsightsName
+  logAnalyticsWorkspaceName: managementVariables.logAnalyticsWorkspaceName
+  storageAccountName: dataVariables.storageAccountName
   virtualNetworkName: networkingVariables.virtualNetworkName
 
   // App Service Variables
@@ -192,6 +199,13 @@ var computeVariables = {
   postgresServerName: dataVariables.postgresServerName
 
   // Virtual Machine Variables
+  virtualMachineSubnetName: networkingVariables.virtualMachineSubnetName
+  virtualMachineName: 'vm-${appenv}'
+  virtualMachineNicName: 'vm-${appenv}-nic'
+  virtualMachineOsDiskName: 'vm-${appenv}-osdisk'
+  virtualMachineDataDiskName: 'vm-${appenv}-datadisk'
+  virtualMachineAdminPassword: resourcePassword
+  virtualMachineAdminUsername: resourceUserName
 }
 
 // Parameters
