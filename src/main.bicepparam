@@ -20,7 +20,7 @@ var certificatePassword = readEnvironmentVariable('CERTIFICATE_PASSWORD', '')
 //////////////////////////////////////////////////
 var appServiceWebAppName = 'app-${appenv}-webapp'
 var appServiceWebAppHostName = '${appServiceWebAppName}.azurewebsites.net'
-var storageName = replace('sa-${appenv}-web', '-', '')
+var storageAccountName = replace('sa-${appenv}-web', '-', '')
 
 var conditionalVariables = {
   deployManagement: readEnvironmentVariable('DEPLOY_MANAGEMENT', 'true')
@@ -31,9 +31,9 @@ var conditionalVariables = {
 }
 
 // TODO: when there's support for environment(), use that
-// var storageHostName = '${storageName}.blob.${environment().suffixes.storage}'
+// var storageAccountHostName = '${storageAccountName}.blob.${environment().suffixes.storage}'
 #disable-next-line no-hardcoded-env-urls
-var storageHostName = '${storageName}.blob.core.windows.net'
+var storageAccountHostName = '${storageAccountName}.blob.core.windows.net'
 
 var managementVariables = {
   deploymentName: 'az-management-${currentDateTime}'
@@ -92,10 +92,12 @@ var networkingVariables = {
   // Virtual Network Subnet Variables
   appServicesSubnetName: 'app-services'
   appServicesSubnetAddressPrefix: '10.0.1.0/24'
-  bastionSubnetName: 'AzureBastionSubnet' // Must be this name: https://learn.microsoft.com/en-us/azure/bastion/configuration-settings#subnet
-  bastionSubnetAddressPrefix: '10.0.200.0/24'
   postgresSubnetName: 'postgres'
   postgresSubnetAddressPrefix: '10.0.2.0/24'
+  storageSubnetName: 'storage'
+  storageSubnetAddressPrefix: '10.0.3.0/24'
+  bastionSubnetName: 'AzureBastionSubnet' // Must be this name: https://learn.microsoft.com/en-us/azure/bastion/configuration-settings#subnet
+  bastionSubnetAddressPrefix: '10.0.200.0/24'
 
   // DNS Variables
   dnsZoneName: rootDomain
@@ -127,7 +129,7 @@ var networkingVariables = {
       originGroupName: 'origingroup-${appenv}-storage'
       originGroupHealthProbePath: '/'
       originName: 'origin-${appenv}-storage'
-      originHostName: storageHostName
+      originHostName: storageAccountHostName
       customDomainName: 'domainname-${appenv}-storage'
       customDomain: 'assets.${rootDomain}'
       customDomainPrefix: 'assets'
@@ -145,7 +147,7 @@ var dataVariables = {
 
   // Postgres Variables
   postgresManagedIdentityName: securityVariables.postgresManagedIdentityName
-  postgresSubnetName: 'postgres'
+  postgresSubnetName: networkingVariables.postgresSubnetName
 
   postgresServerAdminPassword: resourcePassword
   postgresServerAdminUsername: resourceUserName
@@ -156,8 +158,9 @@ var dataVariables = {
   postgresServerVersion: '16'
 
   // Storage Variables
-  storageName: storageName
-  storageHostName: storageHostName
+  storageAccountName: storageAccountName
+  storageAccountHostName: storageAccountHostName
+  storageSubnetName: networkingVariables.storageSubnetName
 }
 
 var computeVariables = {

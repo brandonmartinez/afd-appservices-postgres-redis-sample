@@ -16,6 +16,9 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-09-01' existing 
   resource postgresSubnet 'subnets@2023-09-01' existing = {
     name: parameters.postgresSubnetName
   }
+  resource storageSubnet 'subnets@2023-09-01' existing = {
+    name: parameters.storageSubnetName
+  }
 }
 
 resource postgresManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
@@ -81,5 +84,96 @@ module postgresAdminUser 'data-postgres-adminuser.bicep' = {
     managedIdentityName: postgresManagedIdentity.name
     managedIdentityObjectId: postgresManagedIdentity.properties.principalId
     postgresServerName: postgresServer.name
+  }
+}
+
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: parameters.storageAccountName
+  location: location
+  sku: {
+    name: 'Standard_LRS'
+  }
+  kind: 'StorageV2'
+  properties: {
+    accessTier: 'Hot'
+    allowBlobPublicAccess: false
+    allowSharedKeyAccess: true
+    minimumTlsVersion: 'TLS1_2'
+    dnsEndpointType: 'Standard'
+    defaultToOAuthAuthentication: false
+    supportsHttpsTrafficOnly: true
+    networkAcls: {
+      bypass: 'AzureServices'
+      virtualNetworkRules: []
+      ipRules: []
+      defaultAction: 'Deny'
+    }
+    encryption: {
+      requireInfrastructureEncryption: false
+      services: {
+        file: {
+          keyType: 'Account'
+          enabled: true
+        }
+        blob: {
+          keyType: 'Account'
+          enabled: true
+        }
+      }
+      keySource: 'Microsoft.Storage'
+    }
+  }
+}
+
+resource storageAccountContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-09-01' = {
+  #disable-next-line use-parent-property
+  name: '${storageAccount.name}/default/assets'
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
+resource storageAccountBlobPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  name: 'privatelink.blob.${environment().suffixes.storage}'
+  location: 'global'
+}
+
+resource storageAccountBlobPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-05-01' = {
+  name: '${storageAccount.name}-blob-pe'
+  location: location
+  properties:{
+    subnet: {
+      id: virtualNetwork::storageSubnet.id
+    }
+    privateLinkServiceConnections: [
+    {
+      name: '${storageAccount.name}-blob-pe-conn'
+      properties: {
+        privateLinkServiceId: storageAccount.id
+        groupIds:[
+          'blob'
+        ]
+        privateLinkServiceConnectionState: {
+          status: 'Approved'
+          actionsRequired: 'None'
+        }
+      }
+    }
+    ]
+  }
+}
+
+resource storageAccountBlobPrivateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-05-01' = {
+  parent: storageAccountBlobPrivateEndpoint
+  name: '${storageAccount.name}-blob-peg'
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: storageAccountBlobPrivateDnsZone.name
+        properties: {
+          privateDnsZoneId: storageAccountBlobPrivateDnsZone.id
+        }
+      }
+    ]
   }
 }

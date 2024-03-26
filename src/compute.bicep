@@ -57,7 +57,7 @@ resource webAppAppService 'Microsoft.Web/sites@2023-01-01' = {
         {
           connectionString: '${parameters.postgresServerName}.postgres.database.azure.com'
           type: 'PostgreSQL'
-          name: 'PostgresConnectionString'
+          name: 'DATABASE_CONNECTION_STRING'
         }
       ]
       appSettings: [

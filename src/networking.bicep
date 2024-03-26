@@ -175,6 +175,16 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-09-01' = {
           privateEndpointNetworkPolicies: 'Enabled'
         }
       }
+      {
+        name: parameters.storageSubnetName
+        properties: {
+          addressPrefix: parameters.storageSubnetAddressPrefix
+          networkSecurityGroup: {
+            id: vnetIntegrationNetworkSecurityGroup.id
+          }
+          privateEndpointNetworkPolicies: 'Enabled'
+        }
+      }
     ]
   }
   resource bastionSubnet 'subnets' existing = {
