@@ -116,6 +116,8 @@ var networkingVariables = {
   frontDoorEndpointName: 'fde-${appenv}'
   frontDoorManagedIdentityName: securityVariables.frontDoorManagedIdentityName
   frontDoorProfileName: 'afd-${appenv}'
+  frontDoorRuleSetName: replace('afd-${appenv}-ruleset', '-', '')
+  frontDoorRulesName: replace('afd-${appenv}-rules', '-', '')
   frontDoorSecurityPolicyName: 'securitypolicy-${appenv}'
   frontDoorWafPolicyName: replace('wafpolicy-${appenv}', '-', '')
 

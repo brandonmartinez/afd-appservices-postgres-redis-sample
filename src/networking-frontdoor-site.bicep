@@ -12,6 +12,9 @@ param endpointName string
 @description('The Host Name of the Endpoint from Front Door.')
 param endpointHostName string
 
+@description('The Id of the Rule Set of the Profile from Front Door.')
+param ruleSetId string
+
 @secure()
 @description('The Certificate Secret Id from Front Door.')
 param certificateSecretId string
@@ -98,9 +101,14 @@ resource route 'Microsoft.Cdn/profiles/afdEndpoints/routes@2021-06-01' = {
     patternsToMatch: [
       '/*'
     ]
-    forwardingProtocol: 'MatchRequest'
+    forwardingProtocol: 'HttpsOnly'
     linkToDefaultDomain: 'Disabled'
     httpsRedirect: 'Enabled'
+    ruleSets: [
+      {
+        id: ruleSetId
+      }
+    ]
   }
 }
 

@@ -97,6 +97,34 @@ resource frontDoorCertificateSecret 'Microsoft.Cdn/profiles/secrets@2023-05-01' 
   }
 }
 
+resource frontDoorRuleSet 'Microsoft.Cdn/profiles/ruleSets@2023-07-01-preview' = {
+  name: parameters.frontDoorRuleSetName
+  parent: profile
+}
+
+resource frontDoorRules 'Microsoft.Cdn/profiles/ruleSets/rules@2023-07-01-preview' = {
+  name: parameters.frontDoorRulesName
+  parent: frontDoorRuleSet
+  properties: {
+    actions: [
+      {
+        name: 'ModifyResponseHeader'
+        parameters: {
+          headerAction: 'Overwrite'
+          headerName: 'Strict-Transport-Security'
+          typeName: 'DeliveryRuleHeaderActionParameters'
+          value: 'max-age=31536000; includeSubDomains; preload'
+        }
+      }
+    ]
+    conditions: [
+
+    ]
+    matchProcessingBehavior: 'Continue'
+    order: 1
+  }
+}
+
 module frontDoorSites 'networking-frontdoor-site.bicep' = [
   for (site, i) in parameters.frontDoorSites: {
     name: replace(parameters.frontDoorSitesDeploymentNameTemplate, '$NUMBER', string(i))
@@ -106,6 +134,7 @@ module frontDoorSites 'networking-frontdoor-site.bicep' = [
       endpointName: parameters.frontDoorEndpointName
       endpointHostName: endpoint.properties.hostName
       certificateSecretId: frontDoorCertificateSecret.id
+      ruleSetId: frontDoorRuleSet.id
       parameters: site
     }
   }
