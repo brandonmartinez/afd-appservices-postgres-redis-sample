@@ -179,6 +179,7 @@ var computeVariables = {
   deploymentName: 'az-compute-${currentDateTime}'
   appServicesDeploymentName: 'az-compute-appservices-${currentDateTime}'
   virtualMachineDeploymentName: 'az-compute-virtualmachine-${currentDateTime}'
+  frontDoorProfileName: networkingVariables.frontDoorProfileName
 
   // General Variables
   applicationInsightsName: managementVariables.applicationInsightsName

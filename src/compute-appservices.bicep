@@ -18,6 +18,10 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-09-01' existing 
   }
 }
 
+resource frontDoorProfile 'Microsoft.Cdn/profiles@2022-11-01-preview' existing = {
+  name: parameters.frontDoorProfileName
+}
+
 resource appServiceManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: parameters.appServiceManagedIdentityName
 }
@@ -53,6 +57,32 @@ resource webAppAppService 'Microsoft.Web/sites@2023-01-01' = {
     siteConfig: {
       linuxFxVersion: 'DOCKER|dpage/pgadmin4:latest'
       alwaysOn: true
+      ipSecurityRestrictions: [
+        {
+          ipAddress: '168.63.129.16/32'
+          action: 'Allow'
+          priority: 100
+          name: 'AzureInf001'
+        }
+        {
+          ipAddress: '169.254.169.254/32'
+          action: 'Allow'
+          priority: 100
+          name: 'AzureInf002'
+        }
+        {
+          ipAddress: 'AzureFrontDoor.Backend'
+          tag: 'ServiceTag'
+          action: 'Allow'
+          priority: 100
+          name: 'AFD'
+          headers: {
+            'x-azure-fdid': [
+              frontDoorProfile.properties.frontDoorId
+            ]
+          }
+        }
+      ]
       connectionStrings: [
         {
           connectionString: '${parameters.postgresServerName}.postgres.database.azure.com'

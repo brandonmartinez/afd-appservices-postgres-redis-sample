@@ -14,7 +14,8 @@
 				"ms-azuretools.vscode-bicep",
 				"hediet.vscode-drawio",
 				"esbenp.prettier-vscode",
-				"GitHub.copilot"
+				"GitHub.copilot",
+				"yzhang.markdown-all-in-one"
 			]
 		}
 	}

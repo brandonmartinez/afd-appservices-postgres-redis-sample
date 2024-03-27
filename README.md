@@ -19,4 +19,5 @@ nameservers in your domain registrar's DNS settings.
 
 ### Connect to Postgres with Managed Identity
 
-Reference: [Connect with managed identity to Azure Database for PostgreSQL - Flexible Server](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/how-to-connect-with-managed-identity)
+Reference:
+[Connect with managed identity to Azure Database for PostgreSQL - Flexible Server](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/how-to-connect-with-managed-identity)
