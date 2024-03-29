@@ -17,11 +17,16 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-09-01' existing 
     name: parameters.virtualMachineSubnetName
   }
 }
+
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' existing = {
   name: parameters.storageAccountName
 }
 
-resource virtualMachineNic 'Microsoft.Network/networkInterfaces@2020-08-01' = {
+resource postgresManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
+  name: parameters.postgresManagedIdentityName
+}
+
+resource virtualMachineNic 'Microsoft.Network/networkInterfaces@2023-09-01' = {
   name: parameters.virtualMachineNicName
   tags: tags
   location: location
@@ -40,7 +45,7 @@ resource virtualMachineNic 'Microsoft.Network/networkInterfaces@2020-08-01' = {
   }
 }
 
-resource virtualMachines 'Microsoft.Compute/virtualMachines@2020-12-01' = {
+resource virtualMachines 'Microsoft.Compute/virtualMachines@2023-09-01' = {
   name: parameters.virtualMachineName
   tags: tags
   location: location
@@ -94,6 +99,12 @@ resource virtualMachines 'Microsoft.Compute/virtualMachines@2020-12-01' = {
         enabled: true
         storageUri: storageAccount.properties.primaryEndpoints.blob
       }
+    }
+  }
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${postgresManagedIdentity.id}': {}
     }
   }
 }

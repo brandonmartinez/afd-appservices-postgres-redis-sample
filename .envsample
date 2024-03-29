@@ -5,7 +5,6 @@ AZURE_APPENV=''
 AZURE_SUBSCRIPTIONID=''
 # Specify a username unique to you (i.e., not admin, root, etc.)
 AZURE_RESOURCE_USERNAME=''
-AZURE_RESOURCE_EMAIL=''
 AZURE_RESOURCE_PASSWORD=''
 
 # Current User Config

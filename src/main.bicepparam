@@ -9,7 +9,8 @@ var publicIpAddress = readEnvironmentVariable('PUBLIC_IP_ADDRESS', '')
 var rootDomain = readEnvironmentVariable('ROOT_DOMAIN', '')
 var uploadCertificate = readEnvironmentVariable('UPLOAD_CERTIFICATE', 'true')
 var resourceUserName = readEnvironmentVariable('AZURE_RESOURCE_USERNAME', 'bicep')
-var resourceEmail = readEnvironmentVariable('AZURE_RESOURCE_EMAIL', 'bicep')
+var entraUserEmail = readEnvironmentVariable('ENTRA_USER_EMAIL', 'bicep')
+var entraUserObjectId = readEnvironmentVariable('ENTRA_USER_OBJECTID', 'bicep')
 
 // Note: it's not generally recommended to store passwords here, use key vault instead
 // https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/key-vault-parameter
@@ -147,7 +148,8 @@ var networkingVariables = {
 
 var dataVariables = {
   deploymentName: 'az-data-${currentDateTime}'
-  postgressAdminUserDeploymentName: 'az-data-admin-${currentDateTime}'
+  postgressAdminManagedIdentityDeploymentName: 'az-data-admin-mi-${currentDateTime}'
+  postgressAdminUserDeploymentName: 'az-data-admin-ei-${currentDateTime}'
   storagePrivateEndpointDeploymentName: 'az-data-storage-pe-${currentDateTime}'
   redisPrivateEndpointDeploymentName: 'az-data-redis-pe-${currentDateTime}'
 
@@ -166,6 +168,9 @@ var dataVariables = {
   postgresServerStorageSize: 128
   postgresServerVersion: '16'
 
+  postgresEntraUserName: entraUserEmail
+  postgresEntraObjectId: entraUserObjectId
+
   // Storage Variables
   storageAccountName: storageAccountName
   storageAccountHostName: storageAccountHostName
@@ -182,6 +187,8 @@ var computeVariables = {
   appServicesDeploymentName: 'az-compute-appservices-${currentDateTime}'
   virtualMachineDeploymentName: 'az-compute-virtualmachine-${currentDateTime}'
   frontDoorProfileName: networkingVariables.frontDoorProfileName
+  postgresManagedIdentityName: securityVariables.postgresManagedIdentityName
+  redisManagedIdentityName: securityVariables.redisManagedIdentityName
 
   // General Variables
   applicationInsightsName: managementVariables.applicationInsightsName
@@ -194,10 +201,9 @@ var computeVariables = {
   appServiceWebAppHostName: appServiceWebAppHostName
   appServiceManagedIdentityName: securityVariables.appServiceManagedIdentityName
   appServicesSubnetName: networkingVariables.appServicesSubnetName
-  appServicePgAdminEmail: resourceEmail
+  appServicePgAdminEmail: entraUserEmail
   appServicePgAdminPassword: resourcePassword
 
-  postgresManagedIdentityName: securityVariables.postgresManagedIdentityName
   postgresServerName: dataVariables.postgresServerName
 
   // Virtual Machine Variables

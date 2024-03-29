@@ -44,6 +44,11 @@ az configure --defaults location="$AZURE_LOCATION" group="$AZURE_RESOURCEGROUP"
 info "Setting Bicep to use the locally installed binary (workaround for arm64 architecture)"
 az config set bicep.use_binary_from_path=True
 
+info "Capturing current user entra details for deployment"
+output=$(az ad signed-in-user show --query "{user: userPrincipalName, objectId: id}")
+export ENTRA_USER_EMAIL=$(echo "$output" | jq -r '.user')
+export ENTRA_USER_OBJECTID=$(echo "$output" | jq -r '.objectId')
+
 section "Starting Azure infrastructure deployment"
 
 info "Creating resource group $AZURE_RESOURCEGROUP if it does not exist"

@@ -32,7 +32,6 @@ to configure:
 | AZURE_APPENV            | Short (_< 8 characters_), unique string to identify the deployed resources                        |
 | AZURE_SUBSCRIPTIONID    | The GUID of the Azure subscription resources will be deployed into                                |
 | AZURE_RESOURCE_USERNAME | Short username that will be used as a default login to deployed resources (e.g., Virtual Machine) |
-| AZURE_RESOURCE_EMAIL    | Your email address                                                                                |
 | AZURE_RESOURCE_PASSWORD | Password to login to deployed resources for the `AZURE_RESOURCE_USERNAME`                         |
 
 To get available Azure Locations, run the following `az` command (note, not all

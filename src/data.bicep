@@ -81,11 +81,22 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2022-12-01' =
   }
 }
 
-module postgresAdminUser 'data-postgres-adminuser.bicep' = {
+module postgresManagedIdentityAdminUser 'data-postgres-adminuser.bicep' = {
+  name: parameters.postgressAdminManagedIdentityDeploymentName
+  params: {
+    identityName: postgresManagedIdentity.name
+    identityObjectId: postgresManagedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+    postgresServerName: postgresServer.name
+  }
+}
+
+module postgresEntraUserIdentityAdminUser 'data-postgres-adminuser.bicep' = {
   name: parameters.postgressAdminUserDeploymentName
   params: {
-    managedIdentityName: postgresManagedIdentity.name
-    managedIdentityObjectId: postgresManagedIdentity.properties.principalId
+    identityName: parameters.postgresEntraUserName
+    identityObjectId: parameters.postgresEntraObjectId
+    principalType: 'User'
     postgresServerName: postgresServer.name
   }
 }

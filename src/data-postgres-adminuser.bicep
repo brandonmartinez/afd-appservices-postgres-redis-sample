@@ -1,19 +1,29 @@
+// Parameters
+//////////////////////////////////////////////////
 @description('The name of the Postgres server.')
 param postgresServerName string
 
 @description('The managed identity object/principal ID.')
-param managedIdentityObjectId string
+param identityObjectId string
+
+@allowed([
+  'Group'
+  'ServicePrincipal'
+  'User'
+])
+@description('The principal type of the managed identity.')
+param principalType string = 'ServicePrincipal'
 
 @description('The name of the managed identity')
-param managedIdentityName string
+param identityName string
 
-resource aadUser 'Microsoft.DBforPostgreSQL/flexibleServers/administrators@2022-12-01' = {
-  name: '${postgresServerName}/${managedIdentityObjectId}'
+// Resources
+//////////////////////////////////////////////////
+resource entraAdminUser 'Microsoft.DBforPostgreSQL/flexibleServers/administrators@2022-12-01' = {
+  name: '${postgresServerName}/${identityObjectId}'
   properties: {
     tenantId: subscription().tenantId
-    principalType: 'ServicePrincipal'
-    principalName: managedIdentityName
+    principalType: principalType
+    principalName: identityName
   }
 }
-
-output aadUserName string = aadUser.name
