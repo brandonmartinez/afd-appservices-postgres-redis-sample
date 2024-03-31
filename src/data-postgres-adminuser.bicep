@@ -3,7 +3,7 @@
 @description('The name of the Postgres server.')
 param postgresServerName string
 
-@description('The managed identity object/principal ID.')
+@description('The identity object/principal ID.')
 param identityObjectId string
 
 @allowed([
@@ -11,10 +11,10 @@ param identityObjectId string
   'ServicePrincipal'
   'User'
 ])
-@description('The principal type of the managed identity.')
+@description('The principal type of the identity.')
 param principalType string = 'ServicePrincipal'
 
-@description('The name of the managed identity')
+@description('The name of the identity')
 param identityName string
 
 // Resources

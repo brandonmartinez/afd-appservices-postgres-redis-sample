@@ -94,8 +94,8 @@ module postgresManagedIdentityAdminUser 'data-postgres-adminuser.bicep' = {
 module postgresEntraUserIdentityAdminUser 'data-postgres-adminuser.bicep' = {
   name: parameters.postgressAdminUserDeploymentName
   params: {
-    identityName: parameters.postgresEntraUserName
-    identityObjectId: parameters.postgresEntraObjectId
+    identityName: parameters.entraUserEmail
+    identityObjectId: parameters.entraUserObjectId
     principalType: 'User'
     postgresServerName: postgresServer.name
   }
@@ -176,12 +176,37 @@ resource redisCache 'Microsoft.Cache/redis@2023-08-01' = {
       capacity: 0
     }
     publicNetworkAccess: 'Disabled'
+    redisConfiguration: {
+      'aad-enabled': 'true'
+    }
   }
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
       '${redisManagedIdentity.id}': {}
     }
+  }
+}
+
+module redisManagedIdentityAdminUser 'data-redis-adminuser.bicep' = {
+  name: parameters.redisAdminManagedIdentityDeploymentName
+  params: {
+    redisCacheAccessPolicyName: '${redisCache.name}-accesspolicy-mi'
+    identityName: redisManagedIdentity.name
+    identityObjectId: redisManagedIdentity.properties.principalId
+    builtInPolicyName: 'Data Owner'
+    redisCacheName: redisCache.name
+  }
+}
+
+module redisEntraUserAdminUser 'data-redis-adminuser.bicep' = {
+  name: parameters.redisAdminUserDeploymentName
+  params: {
+    redisCacheAccessPolicyName: '${redisCache.name}-accesspolicy-ei'
+    identityName: parameters.entraUserEmail
+    identityObjectId: parameters.entraUserObjectId
+    builtInPolicyName: 'Data Owner'
+    redisCacheName: redisCache.name
   }
 }
 

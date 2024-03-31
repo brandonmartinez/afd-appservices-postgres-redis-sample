@@ -150,6 +150,8 @@ var dataVariables = {
   deploymentName: 'az-data-${currentDateTime}'
   postgressAdminManagedIdentityDeploymentName: 'az-data-admin-mi-${currentDateTime}'
   postgressAdminUserDeploymentName: 'az-data-admin-ei-${currentDateTime}'
+  redisAdminManagedIdentityDeploymentName: 'az-data-redis-admin-mi-${currentDateTime}'
+  redisAdminUserDeploymentName: 'az-data-redis-admin-ei-${currentDateTime}'
   storagePrivateEndpointDeploymentName: 'az-data-storage-pe-${currentDateTime}'
   redisPrivateEndpointDeploymentName: 'az-data-redis-pe-${currentDateTime}'
 
@@ -168,8 +170,8 @@ var dataVariables = {
   postgresServerStorageSize: 128
   postgresServerVersion: '16'
 
-  postgresEntraUserName: entraUserEmail
-  postgresEntraObjectId: entraUserObjectId
+  entraUserEmail: entraUserEmail
+  entraUserObjectId: entraUserObjectId
 
   // Storage Variables
   storageAccountName: storageAccountName
@@ -180,6 +182,7 @@ var dataVariables = {
   redisManagedIdentityName: securityVariables.redisManagedIdentityName
   redisCacheName: 'redis-${appenv}'
   redisSubnetName: networkingVariables.redisSubnetName
+
 }
 
 var computeVariables = {
