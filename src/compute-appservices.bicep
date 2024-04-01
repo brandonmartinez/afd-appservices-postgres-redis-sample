@@ -30,6 +30,22 @@ resource postgresManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentiti
   name: parameters.postgresManagedIdentityName
 }
 
+resource redisManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
+  name: parameters.redisManagedIdentityName
+}
+
+resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing = {
+  name: parameters.applicationInsightsName
+}
+
+resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2022-12-01' existing = {
+  name: parameters.postgresServerName
+}
+
+resource redisCache 'Microsoft.Cache/redis@2023-08-01' existing = {
+  name: parameters.redisCacheName
+}
+
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
   name: parameters.appServicePlanName
   location: location
@@ -55,7 +71,7 @@ resource webAppAppService 'Microsoft.Web/sites@2023-01-01' = {
     vnetRouteAllEnabled: true
     httpsOnly: true
     siteConfig: {
-      linuxFxVersion: 'DOCKER|dpage/pgadmin4:latest'
+      linuxFxVersion: 'DOCKER|ghcr.io/brandonmartinez/brandonmartinez/node-redis-postgres-azure-app:latest'
       alwaysOn: true
       ipSecurityRestrictions: [
         {
@@ -83,29 +99,38 @@ resource webAppAppService 'Microsoft.Web/sites@2023-01-01' = {
           }
         }
       ]
-      connectionStrings: [
-        {
-          connectionString: '${parameters.postgresServerName}.postgres.database.azure.com'
-          type: 'PostgreSQL'
-          name: 'DATABASE_CONNECTION_STRING'
-        }
-      ]
       appSettings: [
         {
-          name: 'DATABASE_USERNAME'
-          value: '${parameters.postgresServerName}/${postgresManagedIdentity.properties.principalId}'
+          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+          value: applicationInsights.properties.ConnectionString
         }
         {
-          name: 'PGADMIN_DEFAULT_EMAIL'
-          value: parameters.appServicePgAdminEmail
+          name: 'POSTGRES_DATABASE_NAME'
+          value: 'webapp'
         }
         {
-          name: 'PGADMIN_DEFAULT_PASSWORD'
-          value: parameters.appServicePgAdminPassword
+          name: 'POSTGRES_SERVER'
+          value: postgresServer.properties.fullyQualifiedDomainName
         }
         {
-          name: 'PGADMIN_DISABLE_POSTFIX'
-          value: 'True'
+          name: 'POSTGRES_USER_MANAGED_IDENTITY_CLIENTID'
+          value: postgresManagedIdentity.properties.clientId
+        }
+        {
+          name: 'POSTGRES_USER_MANAGED_IDENTITY_USERNAME'
+          value: postgresManagedIdentity.name
+        }
+        {
+          name: 'REDIS_SERVER'
+          value: redisCache.properties.hostName
+        }
+        {
+          name: 'REDIS_USER_MANAGED_IDENTITY_CLIENTID'
+          value: redisManagedIdentity.properties.clientId
+        }
+        {
+          name: 'REDIS_USER_MANAGED_IDENTITY_USERNAME'
+          value: redisManagedIdentity.properties.principalId
         }
       ]
     }
@@ -114,6 +139,8 @@ resource webAppAppService 'Microsoft.Web/sites@2023-01-01' = {
     type: 'UserAssigned'
     userAssignedIdentities: {
       '${appServiceManagedIdentity.id}': {}
+      '${postgresManagedIdentity.id}': {}
+      '${redisManagedIdentity.id}': {}
     }
   }
 }

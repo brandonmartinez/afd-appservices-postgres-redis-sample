@@ -204,10 +204,9 @@ var computeVariables = {
   appServiceWebAppHostName: appServiceWebAppHostName
   appServiceManagedIdentityName: securityVariables.appServiceManagedIdentityName
   appServicesSubnetName: networkingVariables.appServicesSubnetName
-  appServicePgAdminEmail: entraUserEmail
-  appServicePgAdminPassword: resourcePassword
 
   postgresServerName: dataVariables.postgresServerName
+  redisCacheName: dataVariables.redisCacheName
 
   // Virtual Machine Variables
   virtualMachineSubnetName: networkingVariables.virtualMachineSubnetName
