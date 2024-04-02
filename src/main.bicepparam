@@ -71,7 +71,6 @@ var networkingVariables = {
   deploymentName: 'az-networking-${currentDateTime}'
   bastionDeploymentName: 'az-bastion-${currentDateTime}'
   frontDoorDeploymentName: 'az-frontdoor-${currentDateTime}'
-  frontDoorSitesDeploymentNameTemplate: 'az-frontdoor-site$NUMBER-${currentDateTime}'
 
   // General Variables
   publicIpAddress: publicIpAddress
@@ -121,29 +120,6 @@ var networkingVariables = {
   frontDoorRulesName: replace('afd-${appenv}-rules', '-', '')
   frontDoorSecurityPolicyName: 'securitypolicy-${appenv}'
   frontDoorWafPolicyName: replace('wafpolicy-${appenv}', '-', '')
-
-  frontDoorSites: [
-    {
-      originGroupName: 'origingroup-${appenv}-webapp'
-      originGroupHealthProbePath: '/'
-      originName: 'origin-${appenv}-webapp'
-      originHostName: appServiceWebAppHostName
-      customDomainName: 'domainname-${appenv}-webapp'
-      customDomain: 'www.${rootDomain}'
-      customDomainPrefix: 'www'
-      routeName: 'route-${appenv}-webapp'
-    }
-    {
-      originGroupName: 'origingroup-${appenv}-storage'
-      originGroupHealthProbePath: '/'
-      originName: 'origin-${appenv}-storage'
-      originHostName: storageAccountHostName
-      customDomainName: 'domainname-${appenv}-storage'
-      customDomain: 'assets.${rootDomain}'
-      customDomainPrefix: 'assets'
-      routeName: 'route-${appenv}-storage'
-    }
-  ]
 }
 
 var dataVariables = {
@@ -152,8 +128,16 @@ var dataVariables = {
   postgressAdminUserDeploymentName: 'az-data-admin-ei-${currentDateTime}'
   redisAdminManagedIdentityDeploymentName: 'az-data-redis-admin-mi-${currentDateTime}'
   redisAdminUserDeploymentName: 'az-data-redis-admin-ei-${currentDateTime}'
-  storagePrivateEndpointDeploymentName: 'az-data-storage-pe-${currentDateTime}'
   redisPrivateEndpointDeploymentName: 'az-data-redis-pe-${currentDateTime}'
+  storageFrontDoorSiteDeploymentName: 'az-data-storage-fds-${currentDateTime}'
+  storagePrivateEndpointDeploymentName: 'az-data-storage-pe-${currentDateTime}'
+
+  // Existing Resource References
+  frontDoorCertificateSecretName: networkingVariables.frontDoorCertificateSecretName
+  frontDoorDnsZoneName: networkingVariables.dnsZoneName
+  frontDoorEndpointName: networkingVariables.frontDoorEndpointName
+  frontDoorProfileName: networkingVariables.frontDoorProfileName
+  frontDoorRuleSetName: networkingVariables.frontDoorRuleSetName
 
   // General Variables
   virtualNetworkName: networkingVariables.virtualNetworkName
@@ -177,20 +161,39 @@ var dataVariables = {
   storageAccountName: storageAccountName
   storageAccountHostName: storageAccountHostName
   storageSubnetName: networkingVariables.storageSubnetName
+  storageFrontDoorSite: {
+    customDomain: 'assets.${rootDomain}'
+    customDomainName: 'domainname-${appenv}-storage'
+    customDomainPrefix: 'assets'
+    originGroupHealthProbePath: '/'
+    originGroupName: 'origingroup-${appenv}-storage'
+    originHostName: storageAccountHostName
+    originName: 'origin-${appenv}-storage'
+    routeName: 'route-${appenv}-storage'
+  }
 
   // Redis Variables
   redisManagedIdentityName: securityVariables.redisManagedIdentityName
   redisCacheName: 'redis-${appenv}'
   redisSubnetName: networkingVariables.redisSubnetName
-
 }
 
 var computeVariables = {
   deploymentName: 'az-compute-${currentDateTime}'
   appServicesDeploymentName: 'az-compute-appservices-${currentDateTime}'
+  appServiceFrontDoorSiteDeploymentName: 'az-compute-appservices-fds-${currentDateTime}'
+  appServicesPrivateEndpointDeploymentName: 'az-compute-appservices-pe-${currentDateTime}'
   virtualMachineDeploymentName: 'az-compute-virtualmachine-${currentDateTime}'
+
+  // Existing Resource References
+  frontDoorCertificateSecretName: networkingVariables.frontDoorCertificateSecretName
+  frontDoorDnsZoneName: networkingVariables.dnsZoneName
+  frontDoorEndpointName: networkingVariables.frontDoorEndpointName
   frontDoorProfileName: networkingVariables.frontDoorProfileName
+  frontDoorRuleSetName: networkingVariables.frontDoorRuleSetName
   postgresManagedIdentityName: securityVariables.postgresManagedIdentityName
+  postgresServerName: dataVariables.postgresServerName
+  redisCacheName: dataVariables.redisCacheName
   redisManagedIdentityName: securityVariables.redisManagedIdentityName
 
   // General Variables
@@ -204,9 +207,16 @@ var computeVariables = {
   appServiceWebAppHostName: appServiceWebAppHostName
   appServiceManagedIdentityName: securityVariables.appServiceManagedIdentityName
   appServicesSubnetName: networkingVariables.appServicesSubnetName
-
-  postgresServerName: dataVariables.postgresServerName
-  redisCacheName: dataVariables.redisCacheName
+  appServicesFrontDoorSite: {
+    customDomain: 'www.${rootDomain}'
+    customDomainName: 'domainname-${appenv}-webapp'
+    customDomainPrefix: 'www'
+    originGroupHealthProbePath: '/'
+    originGroupName: 'origingroup-${appenv}-webapp'
+    originHostName: appServiceWebAppHostName
+    originName: 'origin-${appenv}-webapp'
+    routeName: 'route-${appenv}-webapp'
+  }
 
   // Virtual Machine Variables
   virtualMachineSubnetName: networkingVariables.virtualMachineSubnetName

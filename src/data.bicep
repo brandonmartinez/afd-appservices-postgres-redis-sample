@@ -24,6 +24,18 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-09-01' existing 
   }
 }
 
+resource frontDoorEndpoint 'Microsoft.Cdn/profiles/afdEndpoints@2021-06-01' existing = {
+  name: parameters.frontDoorEndpointName
+}
+
+resource frontDoorCertificateSecret 'Microsoft.Cdn/profiles/secrets@2023-05-01' existing = {
+  name: parameters.frontDoorCertificateSecretName
+}
+
+resource frontDoorRuleSet 'Microsoft.Cdn/profiles/ruleSets@2023-07-01-preview' existing = {
+  name: parameters.frontDoorRuleSetName
+}
+
 resource postgresManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: parameters.postgresManagedIdentityName
 }
@@ -118,8 +130,6 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
     supportsHttpsTrafficOnly: true
     networkAcls: {
       bypass: 'AzureServices'
-      virtualNetworkRules: []
-      ipRules: []
       defaultAction: 'Deny'
     }
     encryption: {
@@ -159,6 +169,23 @@ module storagePrivateEndpoint 'private-endpoint.bicep' = {
     serviceId: storageAccount.id
     subnetId: virtualNetwork::storageSubnet.id
     virtualNetworkId: virtualNetwork.id
+  }
+}
+
+module storageFrontDoorSite 'networking-frontdoor-site.bicep' = {
+  name: parameters.storageFrontDoorSiteDeploymentName
+  params: {
+    location: location
+    certificateSecretId: frontDoorCertificateSecret.id
+    dnsZoneName: parameters.frontDoorDnsZoneName
+    endpointHostName: frontDoorEndpoint.properties.hostName
+    endpointName: parameters.frontDoorEndpointName
+    privateEndpointResourceId: storagePrivateEndpoint.outputs.privateEndpointId
+    privateEndpointResourceType: 'blob'
+    profileName: parameters.frontDoorProfileName
+    ruleSetId: frontDoorRuleSet.id
+    usePrivateLink: true
+    parameters: parameters.storageFrontDoorSite
   }
 }
 

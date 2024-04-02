@@ -1,5 +1,8 @@
 // Parameters
 //////////////////////////////////////////////////
+@description('The Azure region of the resources.')
+param location string
+
 @description('The Profile Name from Front Door.')
 param profileName string
 
@@ -14,6 +17,15 @@ param endpointHostName string
 
 @description('The Id of the Rule Set of the Profile from Front Door.')
 param ruleSetId string
+
+@description('If a Private Link should be configured for the site.')
+param usePrivateLink bool = false
+
+@description('The Private Link Resource Id.')
+param privateEndpointResourceId string = ''
+
+@description('The Private Link Resource Type.')
+param privateEndpointResourceType string = ''
 
 @secure()
 @description('The Certificate Secret Id from Front Door.')
@@ -60,6 +72,17 @@ resource origin 'Microsoft.Cdn/profiles/originGroups/origins@2021-06-01' = {
     originHostHeader: parameters.originHostName
     priority: 1
     weight: 1000
+    sharedPrivateLinkResource: usePrivateLink
+      ? {
+          privateLink: {
+            id: privateEndpointResourceId
+          }
+          groupId: privateEndpointResourceType
+          privateLinkLocation: location
+          requestMessage: 'Created by Deployment Pipeline'
+          status: 'Approved'
+        }
+      : null
   }
 }
 

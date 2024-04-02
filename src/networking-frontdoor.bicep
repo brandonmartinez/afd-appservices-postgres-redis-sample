@@ -39,7 +39,7 @@ resource profile 'Microsoft.Cdn/profiles@2022-11-01-preview' = {
   location: 'global'
   tags: tags
   sku: {
-    name: 'Standard_AzureFrontDoor'
+    name: 'Premium_AzureFrontDoor'
   }
   identity: {
     type: 'UserAssigned'
@@ -124,18 +124,3 @@ resource frontDoorRules 'Microsoft.Cdn/profiles/ruleSets/rules@2023-07-01-previe
     order: 1
   }
 }
-
-module frontDoorSites 'networking-frontdoor-site.bicep' = [
-  for (site, i) in parameters.frontDoorSites: {
-    name: replace(parameters.frontDoorSitesDeploymentNameTemplate, '$NUMBER', string(i))
-    params: {
-      profileName: parameters.frontDoorProfileName
-      dnsZoneName: parameters.dnsZoneName
-      endpointName: parameters.frontDoorEndpointName
-      endpointHostName: endpoint.properties.hostName
-      certificateSecretId: frontDoorCertificateSecret.id
-      ruleSetId: frontDoorRuleSet.id
-      parameters: site
-    }
-  }
-]

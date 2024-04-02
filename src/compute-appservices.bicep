@@ -13,13 +13,25 @@ param tags object
 //////////////////////////////////////////////////
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
   name: parameters.virtualNetworkName
-  resource appservicesSubnet 'subnets@2023-09-01' existing = {
+  resource appServicesSubnet 'subnets@2023-09-01' existing = {
     name: parameters.appServicesSubnetName
   }
 }
 
 resource frontDoorProfile 'Microsoft.Cdn/profiles@2022-11-01-preview' existing = {
   name: parameters.frontDoorProfileName
+}
+
+resource frontDoorEndpoint 'Microsoft.Cdn/profiles/afdEndpoints@2021-06-01' existing = {
+  name: parameters.frontDoorEndpointName
+}
+
+resource frontDoorCertificateSecret 'Microsoft.Cdn/profiles/secrets@2023-05-01' existing = {
+  name: parameters.frontDoorCertificateSecretName
+}
+
+resource frontDoorRuleSet 'Microsoft.Cdn/profiles/ruleSets@2023-07-01-preview' existing = {
+  name: parameters.frontDoorRuleSetName
 }
 
 resource appServiceManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
@@ -67,7 +79,7 @@ resource webAppAppService 'Microsoft.Web/sites@2023-01-01' = {
   kind: 'linux'
   properties: {
     serverFarmId: appServicePlan.id
-    virtualNetworkSubnetId: virtualNetwork::appservicesSubnet.id
+    virtualNetworkSubnetId: virtualNetwork::appServicesSubnet.id
     vnetRouteAllEnabled: true
     httpsOnly: true
     siteConfig: {
@@ -142,5 +154,35 @@ resource webAppAppService 'Microsoft.Web/sites@2023-01-01' = {
       '${postgresManagedIdentity.id}': {}
       '${redisManagedIdentity.id}': {}
     }
+  }
+}
+
+module webAppAppServicePrivateEndpoint 'private-endpoint.bicep' = {
+  name: parameters.appServicesPrivateEndpointDeploymentName
+  params: {
+    baseName: '${webAppAppService.name}'
+    dnsZoneName: 'privatelink.azurewebsites.net'
+    groupIds: []
+    location: location
+    serviceId: webAppAppService.id
+    subnetId: virtualNetwork::appServicesSubnet.id
+    virtualNetworkId: virtualNetwork.id
+  }
+}
+
+module webAppAppServiceFrontDoorSite 'networking-frontdoor-site.bicep' = {
+  name: parameters.appServiceFrontDoorSiteDeploymentName
+  params: {
+    location: location
+    certificateSecretId: frontDoorCertificateSecret.id
+    dnsZoneName: parameters.frontDoorDnsZoneName
+    endpointHostName: frontDoorEndpoint.properties.hostName
+    endpointName: parameters.frontDoorEndpointName
+    privateEndpointResourceId: webAppAppServicePrivateEndpoint.outputs.privateEndpointId
+    privateEndpointResourceType: 'sites'
+    profileName: parameters.frontDoorProfileName
+    ruleSetId: frontDoorRuleSet.id
+    usePrivateLink: true
+    parameters: parameters.appServicesFrontDoorSite
   }
 }
