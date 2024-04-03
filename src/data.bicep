@@ -197,7 +197,7 @@ module storageFrontDoorSite 'networking-frontdoor-site.bicep' =
   }
 
 module storagePrivateEndpoint 'private-endpoint-storage.bicep' =
-  if (conditionalDeployment.deployDataStorage == 'true') {
+  if (conditionalDeployment.deployDataStorage == 'true' && conditionalDeployment.deployDataStoragePrivateEndpointApproval == 'true') {
     name: parameters.storagePrivateEndpointDeploymentName
     dependsOn: [
       storageFrontDoorSite
@@ -208,7 +208,7 @@ module storagePrivateEndpoint 'private-endpoint-storage.bicep' =
   }
 
 module storagePrivateEndpointApproval 'private-endpoint-storage-approve.bicep' =
-  if (conditionalDeployment.deployDataStorage == 'true') {
+  if (conditionalDeployment.deployDataStorage == 'true' && conditionalDeployment.deployDataStoragePrivateEndpointApproval == 'true') {
     name: parameters.storagePrivateEndpointApprovalDeploymentName
     params: {
       storageAccountName: storageAccount.name

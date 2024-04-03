@@ -22,9 +22,11 @@ CERTIFICATE_PASSWORD=''
 # Conditional Deployments (for debugging)
 ##################################################
 UPLOAD_CERTIFICATE='true'
+DEPLOY_COMPUTE_APPSERVICE_PEAPPROVAL='true'
 DEPLOY_COMPUTE='true'
 DEPLOY_DATA_POSTGRES='true'
 DEPLOY_DATA_REDIS='true'
+DEPLOY_DATA_STORAGE_PEAPPROVAL='true'
 DEPLOY_DATA_STORAGE='true'
 DEPLOY_DATA='true'
 DEPLOY_MANAGEMENT='true'

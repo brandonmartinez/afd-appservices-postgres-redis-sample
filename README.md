@@ -76,14 +76,19 @@ a redeployment is needed, these can be modified to reduce deployment times.
 **Please** review the Bicep templates to understand what is actually going on
 before setting to `false`.
 
-| Variable           | Description                                    |
-| ------------------ | ---------------------------------------------- |
-| UPLOAD_CERTIFICATE | Should the PFX certificate be uploaded         |
-| DEPLOY_MANAGEMENT  | Should the Management Bicep module be deployed |
-| DEPLOY_SECURITY    | Should the Security Bicep module be deployed   |
-| DEPLOY_NETWORKING  | Should the Networking Bicep module be deployed |
-| DEPLOY_DATA        | Should the Data Bicep module be deployed       |
-| DEPLOY_COMPUTE     | Should the Compute Bicep module be deployed    |
+| Variable                             | Description                                                                                                     |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| UPLOAD_CERTIFICATE                   | Should the PFX certificate be uploaded                                                                          |
+| DEPLOY_COMPUTE                       | Should the Compute Bicep module be deployed                                                                     |
+| DEPLOY_COMPUTE_APPSERVICE_PEAPPROVAL | Should the Compute App Services Bicep module deploy the Front Door Private Endpoint Approval (only needed once) |
+| DEPLOY_DATA                          | Should the Data Bicep module be deployed                                                                        |
+| DEPLOY_DATA_POSTGRES                 | Should the Data Bicep Postgres module be deployed                                                               |
+| DEPLOY_DATA_REDIS                    | Should the Data Bicep Redis module be deployed                                                                  |
+| DEPLOY_DATA_STORAGE                  | Should the Data Bicep Storage module be deployed                                                                |
+| DEPLOY_DATA_STORAGE_PEAPPROVAL       | Should the Data Storage Bicep module deploy the Front Door Private Endpoint Approval (only needed once)         |
+| DEPLOY_MANAGEMENT                    | Should the Management Bicep module be deployed                                                                  |
+| DEPLOY_NETWORKING                    | Should the Networking Bicep module be deployed                                                                  |
+| DEPLOY_SECURITY                      | Should the Security Bicep module be deployed                                                                    |
 
 ### Run the Deployment Script
 
@@ -108,8 +113,8 @@ subdeployments to help with debugging). Note that each deployment will be
 timestamped to help track down any potential issues.
 
 > **Notes:** there may be instances where sub-deployments fail, specifically
-identity assignments on Postgres. Re-running the deployment _should_ resolve
-those issues.
+> identity assignments on Postgres. Re-running the deployment _should_ resolve
+> those issues.
 
 ### Connecting Domain to Sample
 

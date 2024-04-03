@@ -25,10 +25,12 @@ var storageAccountName = replace('sa-${appenv}-web', '-', '')
 
 var conditionalVariables = {
   deployCompute: readEnvironmentVariable('DEPLOY_COMPUTE', 'true')
+  deployComputeAppServicePrivateEndpointApproval: readEnvironmentVariable('DEPLOY_COMPUTE_APPSERVICE_PEAPPROVAL', 'true')
   deployData: readEnvironmentVariable('DEPLOY_DATA', 'true')
   deployDataPostgres: readEnvironmentVariable('DEPLOY_DATA_POSTGRES', 'true')
   deployDataRedis: readEnvironmentVariable('DEPLOY_DATA_REDIS', 'true')
   deployDataStorage: readEnvironmentVariable('DEPLOY_DATA_STORAGE', 'true')
+  deployDataStoragePrivateEndpointApproval: readEnvironmentVariable('DEPLOY_DATA_STORAGE_PEAPPROVAL', 'true')
   deployManagement: readEnvironmentVariable('DEPLOY_MANAGEMENT', 'true')
   deployNetworking: readEnvironmentVariable('DEPLOY_NETWORKING', 'true')
   deploySecurity: readEnvironmentVariable('DEPLOY_SECURITY', 'true')
