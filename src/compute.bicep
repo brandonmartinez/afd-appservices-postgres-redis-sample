@@ -14,22 +14,21 @@ param conditionalDeployment object
 
 // Resources
 //////////////////////////////////////////////////
-module appServices 'compute-appservices.bicep' =
-  if (conditionalDeployment.deployComputeAppServicePrivateEndpointApproval == 'true') {
-    name: parameters.appServicesDeploymentName
-    params: {
-      location: location
-      parameters: parameters
-      tags: tags
-    }
+module appServices 'compute-appservices.bicep' = {
+  name: parameters.appServicesDeploymentName
+  params: {
+    location: location
+    parameters: parameters
+    tags: tags
+    conditionalDeployment: conditionalDeployment
   }
+}
 
-module virtualMachine 'compute-virtualmachine.bicep' =
-  if (conditionalDeployment.deployComputeAppServicePrivateEndpointApproval == 'true') {
-    name: parameters.virtualMachineDeploymentName
-    params: {
-      location: location
-      parameters: parameters
-      tags: tags
-    }
+module virtualMachine 'compute-virtualmachine.bicep' = {
+  name: parameters.virtualMachineDeploymentName
+  params: {
+    location: location
+    parameters: parameters
+    tags: tags
   }
+}

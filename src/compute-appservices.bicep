@@ -9,6 +9,9 @@ param parameters object
 @description('Tags to associate with the resources.')
 param tags object
 
+@description('Configuration for conditional deployment of resources.')
+param conditionalDeployment object
+
 // Resources
 //////////////////////////////////////////////////
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
@@ -177,20 +180,22 @@ module webAppAppServiceFrontDoorSite 'networking-frontdoor-site.bicep' = {
   }
 }
 
-module webAppAppServicePrivateEndpoint 'private-endpoint-appservice.bicep' = {
-  name: parameters.appServicesPrivateEndpointDeploymentName
-  dependsOn: [
-    webAppAppServiceFrontDoorSite
-  ]
-  params: {
-    appServiceName: webAppAppService.name
+module webAppAppServicePrivateEndpoint 'private-endpoint-appservice.bicep' =
+  if (conditionalDeployment.deployComputeAppServicePrivateEndpointApproval == 'true') {
+    name: parameters.appServicesPrivateEndpointDeploymentName
+    dependsOn: [
+      webAppAppServiceFrontDoorSite
+    ]
+    params: {
+      appServiceName: webAppAppService.name
+    }
   }
-}
 
-module webAppAppServicePrivateEndpointApproval 'private-endpoint-appservice-approve.bicep' = {
-  name: parameters.appServicesPrivateEndpointApprovalDeploymentName
-  params: {
-    appServiceName: webAppAppService.name
-    privateEndpointConnectionName: webAppAppServicePrivateEndpoint.outputs.appServicePrivateEndpointConnectionName
+module webAppAppServicePrivateEndpointApproval 'private-endpoint-appservice-approve.bicep' =
+  if (conditionalDeployment.deployComputeAppServicePrivateEndpointApproval == 'true') {
+    name: parameters.appServicesPrivateEndpointApprovalDeploymentName
+    params: {
+      appServiceName: webAppAppService.name
+      privateEndpointConnectionName: webAppAppServicePrivateEndpoint.outputs.appServicePrivateEndpointConnectionName
+    }
   }
-}

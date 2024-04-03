@@ -77,6 +77,7 @@ module compute 'compute.bicep' =
     params: {
       location: location
       tags: tags
+      conditionalDeployment: conditionalDeployment
       parameters: computeModuleParameters
     }
   }
