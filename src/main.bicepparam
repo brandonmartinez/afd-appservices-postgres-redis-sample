@@ -192,6 +192,7 @@ var computeVariables = {
   appServicesDeploymentName: 'az-compute-appservices-${currentDateTime}'
   appServiceFrontDoorSiteDeploymentName: 'az-compute-appservices-fds-${currentDateTime}'
   appServicesPrivateEndpointDeploymentName: 'az-compute-appservices-pe-${currentDateTime}'
+  appServicesPrivateEndpointApprovalDeploymentName: 'az-compute-appservices-pea-${currentDateTime}'
   virtualMachineDeploymentName: 'az-compute-virtualmachine-${currentDateTime}'
 
   // Existing Resource References

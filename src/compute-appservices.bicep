@@ -176,3 +176,21 @@ module webAppAppServiceFrontDoorSite 'networking-frontdoor-site.bicep' = {
     parameters: parameters.appServicesFrontDoorSite
   }
 }
+
+module webAppAppServicePrivateEndpoint 'private-endpoint-appservice.bicep' = {
+  name: parameters.appServicesPrivateEndpointDeploymentName
+  dependsOn: [
+    webAppAppServiceFrontDoorSite
+  ]
+  params: {
+    appServiceName: webAppAppService.name
+  }
+}
+
+module webAppAppServicePrivateEndpointApproval 'private-endpoint-appservice-approve.bicep' = {
+  name: parameters.appServicesPrivateEndpointApprovalDeploymentName
+  params: {
+    appServiceName: webAppAppService.name
+    privateEndpointConnectionName: webAppAppServicePrivateEndpoint.outputs.appServicePrivateEndpointConnectionName
+  }
+}
