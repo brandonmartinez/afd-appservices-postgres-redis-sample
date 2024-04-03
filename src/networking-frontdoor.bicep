@@ -24,7 +24,7 @@ resource wafPolicy 'Microsoft.Network/FrontDoorWebApplicationFirewallPolicies@20
   location: 'global'
   tags: tags
   sku: {
-    name: 'Standard_AzureFrontDoor'
+    name: 'Premium_AzureFrontDoor'
   }
   properties: {
     policySettings: {
@@ -98,13 +98,13 @@ resource frontDoorCertificateSecret 'Microsoft.Cdn/profiles/secrets@2023-05-01' 
 }
 
 resource frontDoorRuleSet 'Microsoft.Cdn/profiles/ruleSets@2023-07-01-preview' = {
-  name: parameters.frontDoorRuleSetName
   parent: profile
+  name: parameters.frontDoorRuleSetName
 }
 
 resource frontDoorRules 'Microsoft.Cdn/profiles/ruleSets/rules@2023-07-01-preview' = {
-  name: parameters.frontDoorRulesName
   parent: frontDoorRuleSet
+  name: parameters.frontDoorRulesName
   properties: {
     actions: [
       {

@@ -23,14 +23,17 @@ resource frontDoorProfile 'Microsoft.Cdn/profiles@2022-11-01-preview' existing =
 }
 
 resource frontDoorEndpoint 'Microsoft.Cdn/profiles/afdEndpoints@2021-06-01' existing = {
+  parent: frontDoorProfile
   name: parameters.frontDoorEndpointName
 }
 
 resource frontDoorCertificateSecret 'Microsoft.Cdn/profiles/secrets@2023-05-01' existing = {
+  parent: frontDoorProfile
   name: parameters.frontDoorCertificateSecretName
 }
 
 resource frontDoorRuleSet 'Microsoft.Cdn/profiles/ruleSets@2023-07-01-preview' existing = {
+  parent: frontDoorProfile
   name: parameters.frontDoorRuleSetName
 }
 
@@ -157,19 +160,6 @@ resource webAppAppService 'Microsoft.Web/sites@2023-01-01' = {
   }
 }
 
-module webAppAppServicePrivateEndpoint 'private-endpoint.bicep' = {
-  name: parameters.appServicesPrivateEndpointDeploymentName
-  params: {
-    baseName: '${webAppAppService.name}'
-    dnsZoneName: 'privatelink.azurewebsites.net'
-    groupIds: []
-    location: location
-    serviceId: webAppAppService.id
-    subnetId: virtualNetwork::appServicesSubnet.id
-    virtualNetworkId: virtualNetwork.id
-  }
-}
-
 module webAppAppServiceFrontDoorSite 'networking-frontdoor-site.bicep' = {
   name: parameters.appServiceFrontDoorSiteDeploymentName
   params: {
@@ -178,7 +168,7 @@ module webAppAppServiceFrontDoorSite 'networking-frontdoor-site.bicep' = {
     dnsZoneName: parameters.frontDoorDnsZoneName
     endpointHostName: frontDoorEndpoint.properties.hostName
     endpointName: parameters.frontDoorEndpointName
-    privateEndpointResourceId: webAppAppServicePrivateEndpoint.outputs.privateEndpointId
+    privateEndpointResourceId: webAppAppService.id
     privateEndpointResourceType: 'sites'
     profileName: parameters.frontDoorProfileName
     ruleSetId: frontDoorRuleSet.id

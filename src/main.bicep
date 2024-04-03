@@ -60,6 +60,7 @@ module data 'data.bicep' =
     params: {
       location: location
       tags: tags
+      conditionalDeployment: conditionalDeployment
       parameters: dataModuleParameters
     }
   }
