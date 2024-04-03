@@ -9,17 +9,35 @@ param parameters object
 @description('Tags to associate with the resources.')
 param tags object
 
+@description('Configuration for conditional deployment of resources.')
+param conditionalDeployment object
+
 // Resources
 //////////////////////////////////////////////////
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
   name: parameters.virtualNetworkName
-  resource appservicesSubnet 'subnets@2023-09-01' existing = {
+  resource appServicesSubnet 'subnets@2023-09-01' existing = {
     name: parameters.appServicesSubnetName
   }
 }
 
 resource frontDoorProfile 'Microsoft.Cdn/profiles@2022-11-01-preview' existing = {
   name: parameters.frontDoorProfileName
+}
+
+resource frontDoorEndpoint 'Microsoft.Cdn/profiles/afdEndpoints@2021-06-01' existing = {
+  parent: frontDoorProfile
+  name: parameters.frontDoorEndpointName
+}
+
+resource frontDoorCertificateSecret 'Microsoft.Cdn/profiles/secrets@2023-05-01' existing = {
+  parent: frontDoorProfile
+  name: parameters.frontDoorCertificateSecretName
+}
+
+resource frontDoorRuleSet 'Microsoft.Cdn/profiles/ruleSets@2023-07-01-preview' existing = {
+  parent: frontDoorProfile
+  name: parameters.frontDoorRuleSetName
 }
 
 resource appServiceManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
@@ -67,7 +85,7 @@ resource webAppAppService 'Microsoft.Web/sites@2023-01-01' = {
   kind: 'linux'
   properties: {
     serverFarmId: appServicePlan.id
-    virtualNetworkSubnetId: virtualNetwork::appservicesSubnet.id
+    virtualNetworkSubnetId: virtualNetwork::appServicesSubnet.id
     vnetRouteAllEnabled: true
     httpsOnly: true
     siteConfig: {
@@ -144,3 +162,40 @@ resource webAppAppService 'Microsoft.Web/sites@2023-01-01' = {
     }
   }
 }
+
+module webAppAppServiceFrontDoorSite 'networking-frontdoor-site.bicep' = {
+  name: parameters.appServiceFrontDoorSiteDeploymentName
+  params: {
+    location: location
+    certificateSecretId: frontDoorCertificateSecret.id
+    dnsZoneName: parameters.frontDoorDnsZoneName
+    endpointHostName: frontDoorEndpoint.properties.hostName
+    endpointName: parameters.frontDoorEndpointName
+    privateEndpointResourceId: webAppAppService.id
+    privateEndpointResourceType: 'sites'
+    profileName: parameters.frontDoorProfileName
+    ruleSetId: frontDoorRuleSet.id
+    usePrivateLink: true
+    parameters: parameters.appServicesFrontDoorSite
+  }
+}
+
+module webAppAppServicePrivateEndpoint 'private-endpoint-appservice.bicep' =
+  if (conditionalDeployment.deployComputeAppServicePrivateEndpointApproval == 'true') {
+    name: parameters.appServicesPrivateEndpointDeploymentName
+    dependsOn: [
+      webAppAppServiceFrontDoorSite
+    ]
+    params: {
+      appServiceName: webAppAppService.name
+    }
+  }
+
+module webAppAppServicePrivateEndpointApproval 'private-endpoint-appservice-approve.bicep' =
+  if (conditionalDeployment.deployComputeAppServicePrivateEndpointApproval == 'true') {
+    name: parameters.appServicesPrivateEndpointApprovalDeploymentName
+    params: {
+      appServiceName: webAppAppService.name
+      privateEndpointConnectionName: webAppAppServicePrivateEndpoint.outputs.appServicePrivateEndpointConnectionName
+    }
+  }

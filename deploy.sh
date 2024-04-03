@@ -4,6 +4,9 @@ set -eo pipefail
 
 source ./logging.sh
 
+export CURRENT_DATE_TIME=$(date +"%Y%m%dT%H%M")
+LOG_FILE_NAME="deploy-$CURRENT_DATE_TIME.log"
+
 if [ ! -f .env ]; then
     cp .envsample .env
     warn "Update .env with parameter values and run again"
@@ -17,7 +20,6 @@ set -a
 # pulling from the .env file
 source .env
 # some other exports that are used
-export CURRENT_DATE_TIME=$(date +"%Y%m%dT%H%M")
 export AZURE_RESOURCEGROUP="rg-$AZURE_APPENV"
 
 set +a
@@ -54,11 +56,29 @@ section "Starting Azure infrastructure deployment"
 info "Creating resource group $AZURE_RESOURCEGROUP if it does not exist"
 az group create --name "$AZURE_RESOURCEGROUP" --location "$AZURE_LOCATION"
 
-info "Initiating the Bicep deployment of infrastructure"
+info "Transforming Bicep to ARM JSON"
+START_TIME=$(date +%s)
 
 debug "Manually building the bicep template, as there are some cross-platform issues with az deployment group create"
 az bicep build --file "$SRC_DIR/main.bicep" --outdir "$TEMP_DIR"
 az bicep build-params --file "$SRC_DIR/main.bicepparam" --outfile "$TEMP_DIR/main.parameters.json"
+
+# Attempt to recover Key Vault in case it was previously deleted"
+set +e
+AZURE_KEYVAULT_NAME="kv-$AZURE_APPENV"
+az keyvault show --name "$AZURE_KEYVAULT_NAME" --query "name" &> /dev/null
+if [ $? -ne 0 ]; then
+    info "Attempting to recover Key Vault in case it was previously deleted"
+    az keyvault recover --location "$AZURE_LOCATION" --name $AZURE_KEYVAULT_NAME
+    if [ $? -eq 0 ]; then
+        info "Key Vault $AZURE_KEYVAULT_NAME recovered successfully"
+    else
+        warn "Key Vault $KEYVAULT_NAME was not recovered"
+    fi
+fi
+set -e
+
+info "Initiating the Bicep deployment of infrastructure"
 
 # TODO: use stacks instead of deployment
 AZ_DEPLOYMENT_NAME="az-main-$CURRENT_DATE_TIME"
@@ -73,5 +93,12 @@ output=$(az deployment group create \
 # Echo output to the log for easy access to the deployment outputs
 $(echo "$output" | jq --raw-output 'to_entries[] | .value.value' | while IFS= read -r line; do debug "$line"; done)
 
+END_TIME=$(date +%s)
+
+DURATION=$((END_TIME - START_TIME))
+
 section "Azure infrastructure deployment completed"
+
+info "Deployment was completed in $DURATION seconds"
+
 info "For more information, open .logs/logs.txt"

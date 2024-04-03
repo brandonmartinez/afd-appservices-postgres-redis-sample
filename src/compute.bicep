@@ -9,6 +9,9 @@ param parameters object
 @description('Tags to associate with the resources.')
 param tags object
 
+@description('Configuration for conditional deployment of resources.')
+param conditionalDeployment object
+
 // Resources
 //////////////////////////////////////////////////
 module appServices 'compute-appservices.bicep' = {
@@ -17,6 +20,7 @@ module appServices 'compute-appservices.bicep' = {
     location: location
     parameters: parameters
     tags: tags
+    conditionalDeployment: conditionalDeployment
   }
 }
 

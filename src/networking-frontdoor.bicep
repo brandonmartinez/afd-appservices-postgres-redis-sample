@@ -24,7 +24,7 @@ resource wafPolicy 'Microsoft.Network/FrontDoorWebApplicationFirewallPolicies@20
   location: 'global'
   tags: tags
   sku: {
-    name: 'Standard_AzureFrontDoor'
+    name: 'Premium_AzureFrontDoor'
   }
   properties: {
     policySettings: {
@@ -39,7 +39,7 @@ resource profile 'Microsoft.Cdn/profiles@2022-11-01-preview' = {
   location: 'global'
   tags: tags
   sku: {
-    name: 'Standard_AzureFrontDoor'
+    name: 'Premium_AzureFrontDoor'
   }
   identity: {
     type: 'UserAssigned'
@@ -98,13 +98,13 @@ resource frontDoorCertificateSecret 'Microsoft.Cdn/profiles/secrets@2023-05-01' 
 }
 
 resource frontDoorRuleSet 'Microsoft.Cdn/profiles/ruleSets@2023-07-01-preview' = {
-  name: parameters.frontDoorRuleSetName
   parent: profile
+  name: parameters.frontDoorRuleSetName
 }
 
 resource frontDoorRules 'Microsoft.Cdn/profiles/ruleSets/rules@2023-07-01-preview' = {
-  name: parameters.frontDoorRulesName
   parent: frontDoorRuleSet
+  name: parameters.frontDoorRulesName
   properties: {
     actions: [
       {
@@ -124,18 +124,3 @@ resource frontDoorRules 'Microsoft.Cdn/profiles/ruleSets/rules@2023-07-01-previe
     order: 1
   }
 }
-
-module frontDoorSites 'networking-frontdoor-site.bicep' = [
-  for (site, i) in parameters.frontDoorSites: {
-    name: replace(parameters.frontDoorSitesDeploymentNameTemplate, '$NUMBER', string(i))
-    params: {
-      profileName: parameters.frontDoorProfileName
-      dnsZoneName: parameters.dnsZoneName
-      endpointName: parameters.frontDoorEndpointName
-      endpointHostName: endpoint.properties.hostName
-      certificateSecretId: frontDoorCertificateSecret.id
-      ruleSetId: frontDoorRuleSet.id
-      parameters: site
-    }
-  }
-]

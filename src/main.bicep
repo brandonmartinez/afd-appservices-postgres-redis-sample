@@ -60,6 +60,7 @@ module data 'data.bicep' =
     params: {
       location: location
       tags: tags
+      conditionalDeployment: conditionalDeployment
       parameters: dataModuleParameters
     }
   }
@@ -76,6 +77,7 @@ module compute 'compute.bicep' =
     params: {
       location: location
       tags: tags
+      conditionalDeployment: conditionalDeployment
       parameters: computeModuleParameters
     }
   }

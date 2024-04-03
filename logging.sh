@@ -11,7 +11,8 @@ declare -A log_colors=([$ERROR]='31m' [$WARN]='33m' [$INFO]='37m' [$DEBUG]='90m'
 
 LOG_LEVEL=${LOG_LEVEL:-$INFO}
 LOG_DIR="$(dirname "$0")/.logs"
-LOG_FILE="$LOG_DIR/logs.txt"
+LOG_FILE_NAME=${LOG_FILE_NAME:-'logs.txt'}
+LOG_FILE="$LOG_DIR/$LOG_FILE_NAME"
 
 mkdir -p $LOG_DIR
 

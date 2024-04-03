@@ -24,11 +24,16 @@ var appServiceWebAppHostName = '${appServiceWebAppName}.azurewebsites.net'
 var storageAccountName = replace('sa-${appenv}-web', '-', '')
 
 var conditionalVariables = {
-  deployManagement: readEnvironmentVariable('DEPLOY_MANAGEMENT', 'true')
-  deploySecurity: readEnvironmentVariable('DEPLOY_SECURITY', 'true')
-  deployNetworking: readEnvironmentVariable('DEPLOY_NETWORKING', 'true')
-  deployData: readEnvironmentVariable('DEPLOY_DATA', 'true')
   deployCompute: readEnvironmentVariable('DEPLOY_COMPUTE', 'true')
+  deployComputeAppServicePrivateEndpointApproval: readEnvironmentVariable('DEPLOY_COMPUTE_APPSERVICE_PEAPPROVAL', 'true')
+  deployData: readEnvironmentVariable('DEPLOY_DATA', 'true')
+  deployDataPostgres: readEnvironmentVariable('DEPLOY_DATA_POSTGRES', 'true')
+  deployDataRedis: readEnvironmentVariable('DEPLOY_DATA_REDIS', 'true')
+  deployDataStorage: readEnvironmentVariable('DEPLOY_DATA_STORAGE', 'true')
+  deployDataStoragePrivateEndpointApproval: readEnvironmentVariable('DEPLOY_DATA_STORAGE_PEAPPROVAL', 'true')
+  deployManagement: readEnvironmentVariable('DEPLOY_MANAGEMENT', 'true')
+  deployNetworking: readEnvironmentVariable('DEPLOY_NETWORKING', 'true')
+  deploySecurity: readEnvironmentVariable('DEPLOY_SECURITY', 'true')
 }
 
 // TODO: when there's support for environment(), use that
@@ -71,7 +76,6 @@ var networkingVariables = {
   deploymentName: 'az-networking-${currentDateTime}'
   bastionDeploymentName: 'az-bastion-${currentDateTime}'
   frontDoorDeploymentName: 'az-frontdoor-${currentDateTime}'
-  frontDoorSitesDeploymentNameTemplate: 'az-frontdoor-site$NUMBER-${currentDateTime}'
 
   // General Variables
   publicIpAddress: publicIpAddress
@@ -92,18 +96,22 @@ var networkingVariables = {
   virtualNetworkPrefix: '10.0.0.0/16'
 
   // Virtual Network Subnet Variables
-  appServicesSubnetName: 'app-services'
+  // Using the following pattern:
+  // 10.0.x.0 - compute services
+  // 10.0.4x.0 - data services
+  // 10.0.2xx.0 - perimeter services
   appServicesSubnetAddressPrefix: '10.0.1.0/24'
-  postgresSubnetName: 'postgres'
-  postgresSubnetAddressPrefix: '10.0.2.0/24'
-  storageSubnetName: 'storage'
-  storageSubnetAddressPrefix: '10.0.3.0/24'
-  redisSubnetName: 'redis'
-  redisSubnetAddressPrefix: '10.0.4.0/24'
-  virtualMachineSubnetName: 'virtual-machine'
-  virtualMachineSubnetAddressPrefix: '10.0.5.0/24'
-  bastionSubnetName: 'AzureBastionSubnet' // Must be this name: https://learn.microsoft.com/en-us/azure/bastion/configuration-settings#subnet
+  appServicesSubnetName: 'app-services'
   bastionSubnetAddressPrefix: '10.0.200.0/24'
+  bastionSubnetName: 'AzureBastionSubnet' // Must be this name: https://learn.microsoft.com/en-us/azure/bastion/configuration-settings#subnet
+  postgresSubnetAddressPrefix: '10.0.41.0/24'
+  postgresSubnetName: 'postgres'
+  redisSubnetAddressPrefix: '10.0.42.0/24'
+  redisSubnetName: 'redis'
+  storageSubnetAddressPrefix: '10.0.40.0/24'
+  storageSubnetName: 'storage'
+  virtualMachineSubnetAddressPrefix: '10.0.2.0/24'
+  virtualMachineSubnetName: 'virtual-machine'
 
   // DNS Variables
   dnsZoneName: rootDomain
@@ -121,29 +129,6 @@ var networkingVariables = {
   frontDoorRulesName: replace('afd-${appenv}-rules', '-', '')
   frontDoorSecurityPolicyName: 'securitypolicy-${appenv}'
   frontDoorWafPolicyName: replace('wafpolicy-${appenv}', '-', '')
-
-  frontDoorSites: [
-    {
-      originGroupName: 'origingroup-${appenv}-webapp'
-      originGroupHealthProbePath: '/'
-      originName: 'origin-${appenv}-webapp'
-      originHostName: appServiceWebAppHostName
-      customDomainName: 'domainname-${appenv}-webapp'
-      customDomain: 'www.${rootDomain}'
-      customDomainPrefix: 'www'
-      routeName: 'route-${appenv}-webapp'
-    }
-    {
-      originGroupName: 'origingroup-${appenv}-storage'
-      originGroupHealthProbePath: '/'
-      originName: 'origin-${appenv}-storage'
-      originHostName: storageAccountHostName
-      customDomainName: 'domainname-${appenv}-storage'
-      customDomain: 'assets.${rootDomain}'
-      customDomainPrefix: 'assets'
-      routeName: 'route-${appenv}-storage'
-    }
-  ]
 }
 
 var dataVariables = {
@@ -152,8 +137,17 @@ var dataVariables = {
   postgressAdminUserDeploymentName: 'az-data-admin-ei-${currentDateTime}'
   redisAdminManagedIdentityDeploymentName: 'az-data-redis-admin-mi-${currentDateTime}'
   redisAdminUserDeploymentName: 'az-data-redis-admin-ei-${currentDateTime}'
-  storagePrivateEndpointDeploymentName: 'az-data-storage-pe-${currentDateTime}'
   redisPrivateEndpointDeploymentName: 'az-data-redis-pe-${currentDateTime}'
+  storageFrontDoorSiteDeploymentName: 'az-data-storage-fds-${currentDateTime}'
+  storagePrivateEndpointDeploymentName: 'az-data-storage-pe-${currentDateTime}'
+  storagePrivateEndpointApprovalDeploymentName: 'az-data-storage-pea-${currentDateTime}'
+
+  // Existing Resource References
+  frontDoorCertificateSecretName: networkingVariables.frontDoorCertificateSecretName
+  frontDoorDnsZoneName: networkingVariables.dnsZoneName
+  frontDoorEndpointName: networkingVariables.frontDoorEndpointName
+  frontDoorProfileName: networkingVariables.frontDoorProfileName
+  frontDoorRuleSetName: networkingVariables.frontDoorRuleSetName
 
   // General Variables
   virtualNetworkName: networkingVariables.virtualNetworkName
@@ -177,20 +171,41 @@ var dataVariables = {
   storageAccountName: storageAccountName
   storageAccountHostName: storageAccountHostName
   storageSubnetName: networkingVariables.storageSubnetName
+  storageAccountAllowedIpAddress: publicIpAddress
+  storageFrontDoorSite: {
+    customDomain: 'assets.${rootDomain}'
+    customDomainName: 'domainname-${appenv}-storage'
+    customDomainPrefix: 'assets'
+    originGroupHealthProbePath: '/'
+    originGroupName: 'origingroup-${appenv}-storage'
+    originHostName: storageAccountHostName
+    originName: 'origin-${appenv}-storage'
+    routeName: 'route-${appenv}-storage'
+  }
 
   // Redis Variables
   redisManagedIdentityName: securityVariables.redisManagedIdentityName
   redisCacheName: 'redis-${appenv}'
   redisSubnetName: networkingVariables.redisSubnetName
-
 }
 
 var computeVariables = {
   deploymentName: 'az-compute-${currentDateTime}'
   appServicesDeploymentName: 'az-compute-appservices-${currentDateTime}'
+  appServiceFrontDoorSiteDeploymentName: 'az-compute-appservices-fds-${currentDateTime}'
+  appServicesPrivateEndpointDeploymentName: 'az-compute-appservices-pe-${currentDateTime}'
+  appServicesPrivateEndpointApprovalDeploymentName: 'az-compute-appservices-pea-${currentDateTime}'
   virtualMachineDeploymentName: 'az-compute-virtualmachine-${currentDateTime}'
+
+  // Existing Resource References
+  frontDoorCertificateSecretName: networkingVariables.frontDoorCertificateSecretName
+  frontDoorDnsZoneName: networkingVariables.dnsZoneName
+  frontDoorEndpointName: networkingVariables.frontDoorEndpointName
   frontDoorProfileName: networkingVariables.frontDoorProfileName
+  frontDoorRuleSetName: networkingVariables.frontDoorRuleSetName
   postgresManagedIdentityName: securityVariables.postgresManagedIdentityName
+  postgresServerName: dataVariables.postgresServerName
+  redisCacheName: dataVariables.redisCacheName
   redisManagedIdentityName: securityVariables.redisManagedIdentityName
 
   // General Variables
@@ -204,9 +219,16 @@ var computeVariables = {
   appServiceWebAppHostName: appServiceWebAppHostName
   appServiceManagedIdentityName: securityVariables.appServiceManagedIdentityName
   appServicesSubnetName: networkingVariables.appServicesSubnetName
-
-  postgresServerName: dataVariables.postgresServerName
-  redisCacheName: dataVariables.redisCacheName
+  appServicesFrontDoorSite: {
+    customDomain: 'www.${rootDomain}'
+    customDomainName: 'domainname-${appenv}-webapp'
+    customDomainPrefix: 'www'
+    originGroupHealthProbePath: '/'
+    originGroupName: 'origingroup-${appenv}-webapp'
+    originHostName: appServiceWebAppHostName
+    originName: 'origin-${appenv}-webapp'
+    routeName: 'route-${appenv}-webapp'
+  }
 
   // Virtual Machine Variables
   virtualMachineSubnetName: networkingVariables.virtualMachineSubnetName

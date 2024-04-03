@@ -6,8 +6,14 @@
 			"installBicep": true,
 			"version": "latest"
 		},
-		"ghcr.io/stuartleeks/dev-container-features/azure-cli-persistence:0": {}
+		"ghcr.io/stuartleeks/dev-container-features/azure-cli-persistence:0": {},
+		"ghcr.io/devcontainers/features/sshd:1": {
+			"version": "latest"
+		}
 	},
+	"forwardPorts": [
+		2222
+	],
 	"customizations": {
 		"vscode": {
 			"extensions": [

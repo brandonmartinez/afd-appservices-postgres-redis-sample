@@ -1,5 +1,8 @@
 // Parameters
 //////////////////////////////////////////////////
+@description('The Azure region of the resources.')
+param location string
+
 @description('The Profile Name from Front Door.')
 param profileName string
 
@@ -15,6 +18,15 @@ param endpointHostName string
 @description('The Id of the Rule Set of the Profile from Front Door.')
 param ruleSetId string
 
+@description('If a Private Link should be configured for the site.')
+param usePrivateLink bool = false
+
+@description('The Private Link Resource Id.')
+param privateEndpointResourceId string = ''
+
+@description('The Private Link Resource Type.')
+param privateEndpointResourceType string = ''
+
 @secure()
 @description('The Certificate Secret Id from Front Door.')
 param certificateSecretId string
@@ -24,16 +36,16 @@ param parameters object
 
 // Resources
 //////////////////////////////////////////////////
-resource profile 'Microsoft.Cdn/profiles@2022-11-01-preview' existing = {
+resource profile 'Microsoft.Cdn/profiles@2023-05-01' existing = {
   name: profileName
 }
 
-resource endpoint 'Microsoft.Cdn/profiles/afdEndpoints@2021-06-01' existing = {
+resource endpoint 'Microsoft.Cdn/profiles/afdEndpoints@2023-05-01' existing = {
   parent: profile
   name: endpointName
 }
 
-resource originGroup 'Microsoft.Cdn/profiles/originGroups@2021-06-01' = {
+resource originGroup 'Microsoft.Cdn/profiles/originGroups@2023-05-01' = {
   parent: profile
   name: parameters.originGroupName
   properties: {
@@ -50,7 +62,7 @@ resource originGroup 'Microsoft.Cdn/profiles/originGroups@2021-06-01' = {
   }
 }
 
-resource origin 'Microsoft.Cdn/profiles/originGroups/origins@2021-06-01' = {
+resource origin 'Microsoft.Cdn/profiles/originGroups/origins@2023-05-01' = {
   parent: originGroup
   name: parameters.originName
   properties: {
@@ -60,6 +72,17 @@ resource origin 'Microsoft.Cdn/profiles/originGroups/origins@2021-06-01' = {
     originHostHeader: parameters.originHostName
     priority: 1
     weight: 1000
+    sharedPrivateLinkResource: usePrivateLink
+      ? {
+          privateLink: {
+            id: privateEndpointResourceId
+          }
+          groupId: privateEndpointResourceType
+          privateLinkLocation: location
+          requestMessage: 'Created by Deployment Pipeline'
+          status: 'Approved'
+        }
+      : null
   }
 }
 

@@ -76,14 +76,19 @@ a redeployment is needed, these can be modified to reduce deployment times.
 **Please** review the Bicep templates to understand what is actually going on
 before setting to `false`.
 
-| Variable           | Description                                    |
-| ------------------ | ---------------------------------------------- |
-| UPLOAD_CERTIFICATE | Should the PFX certificate be uploaded         |
-| DEPLOY_MANAGEMENT  | Should the Management Bicep module be deployed |
-| DEPLOY_SECURITY    | Should the Security Bicep module be deployed   |
-| DEPLOY_NETWORKING  | Should the Networking Bicep module be deployed |
-| DEPLOY_DATA        | Should the Data Bicep module be deployed       |
-| DEPLOY_COMPUTE     | Should the Compute Bicep module be deployed    |
+| Variable                             | Description                                                                                                     |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| UPLOAD_CERTIFICATE                   | Should the PFX certificate be uploaded                                                                          |
+| DEPLOY_COMPUTE                       | Should the Compute Bicep module be deployed                                                                     |
+| DEPLOY_COMPUTE_APPSERVICE_PEAPPROVAL | Should the Compute App Services Bicep module deploy the Front Door Private Endpoint Approval (only needed once) |
+| DEPLOY_DATA                          | Should the Data Bicep module be deployed                                                                        |
+| DEPLOY_DATA_POSTGRES                 | Should the Data Bicep Postgres module be deployed                                                               |
+| DEPLOY_DATA_REDIS                    | Should the Data Bicep Redis module be deployed                                                                  |
+| DEPLOY_DATA_STORAGE                  | Should the Data Bicep Storage module be deployed                                                                |
+| DEPLOY_DATA_STORAGE_PEAPPROVAL       | Should the Data Storage Bicep module deploy the Front Door Private Endpoint Approval (only needed once)         |
+| DEPLOY_MANAGEMENT                    | Should the Management Bicep module be deployed                                                                  |
+| DEPLOY_NETWORKING                    | Should the Networking Bicep module be deployed                                                                  |
+| DEPLOY_SECURITY                      | Should the Security Bicep module be deployed                                                                    |
 
 ### Run the Deployment Script
 
@@ -107,6 +112,10 @@ that will show the status of the deployment (which is broken down into
 subdeployments to help with debugging). Note that each deployment will be
 timestamped to help track down any potential issues.
 
+> **Notes:** there may be instances where sub-deployments fail, specifically
+> identity assignments on Postgres. Re-running the deployment _should_ resolve
+> those issues.
+
 ### Connecting Domain to Sample
 
 Once a deployment is successful, one last step needs to be done to access the
@@ -123,8 +132,43 @@ Once the domain is configured, you can visit the main site by going to
 
 ## Removing the Sample
 
-Automation coming soon. For now, you can delete the resource group that was
-created, which should remove all resources.
+To remove all resources that have been deployed, run the removal script:
+
+```sh
+./remove.sh
+```
+
+This will remove the Log Analytics workspace (skipping soft-deletes) and then
+remove the resource group that was created that contains all of the other
+created resources.
+
+If there are any issues deleteing the resource group, you can try re-running the
+script, or manually deleting the resources and/or resource group from the Azure
+Portal.
+
+## Connecting to the Dev Container from a Local Terminal
+
+The Dev Container has an SSH server running that allows you to use your local
+terminal to connect to the running container. To do this, you'll first need to
+set a password for the current user in the container (do this in a shell within
+the Dev Container):
+
+```sh
+sudo passwd vscode
+```
+
+You can then connect from your local machine's terminal by executing this
+command:
+
+```sh
+ssh -p 2222 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null vscode@localhost
+```
+
+You may need to `cd` to the workspace directory to run the deployment scripts:
+
+```sh
+cd /workspaces/afd-appservices-postgres-redis-sample/
+```
 
 ## Additional Notes
 
