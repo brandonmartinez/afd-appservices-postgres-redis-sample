@@ -5,12 +5,13 @@ using '../src/main.bicep'
 var appenv = readEnvironmentVariable('AZURE_APPENV', '')
 var certificateBase64String = readEnvironmentVariable('CERTIFICATE_BASE64_STRING', '')
 var currentDateTime = readEnvironmentVariable('CURRENT_DATE_TIME', '')
-var publicIpAddress = readEnvironmentVariable('PUBLIC_IP_ADDRESS', '')
-var rootDomain = readEnvironmentVariable('ROOT_DOMAIN', '')
-var uploadCertificate = readEnvironmentVariable('UPLOAD_CERTIFICATE', 'true')
-var resourceUserName = readEnvironmentVariable('AZURE_RESOURCE_USERNAME', 'bicep')
 var entraUserEmail = readEnvironmentVariable('ENTRA_USER_EMAIL', 'bicep')
 var entraUserObjectId = readEnvironmentVariable('ENTRA_USER_OBJECTID', 'bicep')
+var publicIpAddress = readEnvironmentVariable('PUBLIC_IP_ADDRESS', '')
+var resourceUserName = readEnvironmentVariable('AZURE_RESOURCE_USERNAME', 'bicep')
+var rootDomain = readEnvironmentVariable('ROOT_DOMAIN', '')
+var uploadCertificate = readEnvironmentVariable('UPLOAD_CERTIFICATE', 'true') == 'true'
+var useManagedCertificate = readEnvironmentVariable('USE_MANAGED_CERTIFICATE', 'true') == 'true'
 
 // Note: it's not generally recommended to store passwords here, use key vault instead
 // https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/key-vault-parameter
@@ -24,16 +25,19 @@ var appServiceWebAppHostName = '${appServiceWebAppName}.azurewebsites.net'
 var storageAccountName = replace('sa-${appenv}-web', '-', '')
 
 var conditionalVariables = {
-  deployCompute: readEnvironmentVariable('DEPLOY_COMPUTE', 'true')
-  deployComputeAppServicePrivateEndpointApproval: readEnvironmentVariable('DEPLOY_COMPUTE_APPSERVICE_PEAPPROVAL', 'true')
-  deployData: readEnvironmentVariable('DEPLOY_DATA', 'true')
-  deployDataPostgres: readEnvironmentVariable('DEPLOY_DATA_POSTGRES', 'true')
-  deployDataRedis: readEnvironmentVariable('DEPLOY_DATA_REDIS', 'true')
-  deployDataStorage: readEnvironmentVariable('DEPLOY_DATA_STORAGE', 'true')
-  deployDataStoragePrivateEndpointApproval: readEnvironmentVariable('DEPLOY_DATA_STORAGE_PEAPPROVAL', 'true')
-  deployManagement: readEnvironmentVariable('DEPLOY_MANAGEMENT', 'true')
-  deployNetworking: readEnvironmentVariable('DEPLOY_NETWORKING', 'true')
-  deploySecurity: readEnvironmentVariable('DEPLOY_SECURITY', 'true')
+  deployCompute: readEnvironmentVariable('DEPLOY_COMPUTE', 'true') == 'true'
+  deployComputeAppServicePrivateEndpointApproval: readEnvironmentVariable(
+    'DEPLOY_COMPUTE_APPSERVICE_PEAPPROVAL',
+    'true'
+  ) == 'true'
+  deployData: readEnvironmentVariable('DEPLOY_DATA', 'true') == 'true'
+  deployDataPostgres: readEnvironmentVariable('DEPLOY_DATA_POSTGRES', 'true') == 'true'
+  deployDataRedis: readEnvironmentVariable('DEPLOY_DATA_REDIS', 'true') == 'true'
+  deployDataStorage: readEnvironmentVariable('DEPLOY_DATA_STORAGE', 'true') == 'true'
+  deployDataStoragePrivateEndpointApproval: readEnvironmentVariable('DEPLOY_DATA_STORAGE_PEAPPROVAL', 'true') == 'true'
+  deployManagement: readEnvironmentVariable('DEPLOY_MANAGEMENT', 'true') == 'true'
+  deployNetworking: readEnvironmentVariable('DEPLOY_NETWORKING', 'true') == 'true'
+  deploySecurity: readEnvironmentVariable('DEPLOY_SECURITY', 'true') == 'true'
 }
 
 // TODO: when there's support for environment(), use that
@@ -70,6 +74,7 @@ var securityVariables = {
   resourcePassword: resourcePassword
   resourcePasswordSecretName: 'password-${appenv}'
   uploadCertificate: uploadCertificate
+  useManagedCertificate: useManagedCertificate
 }
 
 var networkingVariables = {
@@ -128,6 +133,7 @@ var networkingVariables = {
   frontDoorRuleSetName: replace('afd-${appenv}-ruleset', '-', '')
   frontDoorRulesName: replace('afd-${appenv}-rules', '-', '')
   frontDoorSecurityPolicyName: 'securitypolicy-${appenv}'
+  frontDoorUseManagedCertificate: useManagedCertificate
   frontDoorWafPolicyName: replace('wafpolicy-${appenv}', '-', '')
 }
 
@@ -148,6 +154,7 @@ var dataVariables = {
   frontDoorEndpointName: networkingVariables.frontDoorEndpointName
   frontDoorProfileName: networkingVariables.frontDoorProfileName
   frontDoorRuleSetName: networkingVariables.frontDoorRuleSetName
+  frontDoorUseManagedCertificate: networkingVariables.frontDoorUseManagedCertificate
 
   // General Variables
   virtualNetworkName: networkingVariables.virtualNetworkName
@@ -173,6 +180,7 @@ var dataVariables = {
   storageSubnetName: networkingVariables.storageSubnetName
   storageAccountAllowedIpAddress: publicIpAddress
   storageFrontDoorSite: {
+    customDomainValidationDeploymentName: 'az-data-storage-fds-cd-${currentDateTime}'
     customDomain: 'assets.${rootDomain}'
     customDomainName: 'domainname-${appenv}-storage'
     customDomainPrefix: 'assets'
@@ -203,6 +211,7 @@ var computeVariables = {
   frontDoorEndpointName: networkingVariables.frontDoorEndpointName
   frontDoorProfileName: networkingVariables.frontDoorProfileName
   frontDoorRuleSetName: networkingVariables.frontDoorRuleSetName
+  frontDoorUseManagedCertificate: networkingVariables.frontDoorUseManagedCertificate
   postgresManagedIdentityName: securityVariables.postgresManagedIdentityName
   postgresServerName: dataVariables.postgresServerName
   redisCacheName: dataVariables.redisCacheName
@@ -220,6 +229,7 @@ var computeVariables = {
   appServiceManagedIdentityName: securityVariables.appServiceManagedIdentityName
   appServicesSubnetName: networkingVariables.appServicesSubnetName
   appServicesFrontDoorSite: {
+    customDomainValidationDeploymentName: 'az-compute-appservices-fds-cd-${currentDateTime}'
     customDomain: 'www.${rootDomain}'
     customDomainName: 'domainname-${appenv}-webapp'
     customDomainPrefix: 'www'

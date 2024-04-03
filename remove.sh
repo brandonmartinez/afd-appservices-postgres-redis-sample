@@ -57,6 +57,10 @@ info "Removing Log Analytics workspace"
 
 az monitor log-analytics workspace delete --force --workspace-name "log-$AZURE_APPENV" --yes
 
+info "Removing App Service Virtual Network Integration"
+
+az webapp vnet-integration remove --name "app-$AZURE_APPENV-webapp"
+
 info "Removing Resource Group"
 
 az group delete --name "$AZURE_RESOURCEGROUP" --yes

@@ -36,10 +36,11 @@ resource frontDoorEndpoint 'Microsoft.Cdn/profiles/afdEndpoints@2021-06-01' exis
   name: parameters.frontDoorEndpointName
 }
 
-resource frontDoorCertificateSecret 'Microsoft.Cdn/profiles/secrets@2023-05-01' existing = {
-  parent: frontDoorProfile
-  name: parameters.frontDoorCertificateSecretName
-}
+resource frontDoorCertificateSecret 'Microsoft.Cdn/profiles/secrets@2023-05-01' existing =
+  if (!parameters.frontDoorUseManagedCertificate) {
+    parent: frontDoorProfile
+    name: parameters.frontDoorCertificateSecretName
+  }
 
 resource frontDoorRuleSet 'Microsoft.Cdn/profiles/ruleSets@2023-07-01-preview' existing = {
   parent: frontDoorProfile
@@ -64,7 +65,7 @@ resource privateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
 }
 
 resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2022-12-01' =
-  if (conditionalDeployment.deployDataPostgres == 'true') {
+  if (conditionalDeployment.deployDataPostgres) {
     name: parameters.postgresServerName
     location: location
     tags: tags
@@ -105,7 +106,7 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2022-12-01' =
   }
 
 module postgresManagedIdentityAdminUser 'data-postgres-adminuser.bicep' =
-  if (conditionalDeployment.deployDataPostgres == 'true') {
+  if (conditionalDeployment.deployDataPostgres) {
     name: parameters.postgressAdminManagedIdentityDeploymentName
     params: {
       identityName: postgresManagedIdentity.name
@@ -116,7 +117,7 @@ module postgresManagedIdentityAdminUser 'data-postgres-adminuser.bicep' =
   }
 
 module postgresEntraUserIdentityAdminUser 'data-postgres-adminuser.bicep' =
-  if (conditionalDeployment.deployDataPostgres == 'true') {
+  if (conditionalDeployment.deployDataPostgres) {
     name: parameters.postgressAdminUserDeploymentName
     params: {
       identityName: parameters.entraUserEmail
@@ -127,7 +128,7 @@ module postgresEntraUserIdentityAdminUser 'data-postgres-adminuser.bicep' =
   }
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' =
-  if (conditionalDeployment.deployDataStorage == 'true') {
+  if (conditionalDeployment.deployDataStorage) {
     name: parameters.storageAccountName
     location: location
     sku: {
@@ -170,7 +171,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' =
   }
 
 resource storageAccountContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-09-01' =
-  if (conditionalDeployment.deployDataStorage == 'true') {
+  if (conditionalDeployment.deployDataStorage) {
     #disable-next-line use-parent-property
     name: '${storageAccount.name}/default/images'
     properties: {
@@ -179,11 +180,11 @@ resource storageAccountContainer 'Microsoft.Storage/storageAccounts/blobServices
   }
 
 module storageFrontDoorSite 'networking-frontdoor-site.bicep' =
-  if (conditionalDeployment.deployDataStorage == 'true') {
+  if (conditionalDeployment.deployDataStorage) {
     name: parameters.storageFrontDoorSiteDeploymentName
     params: {
       location: location
-      certificateSecretId: frontDoorCertificateSecret.id
+      certificateSecretId: (!parameters.frontDoorUseManagedCertificate) ? frontDoorCertificateSecret.id : null
       dnsZoneName: parameters.frontDoorDnsZoneName
       endpointHostName: frontDoorEndpoint.properties.hostName
       endpointName: frontDoorEndpoint.name
@@ -192,12 +193,13 @@ module storageFrontDoorSite 'networking-frontdoor-site.bicep' =
       profileName: frontDoorProfile.name
       ruleSetId: frontDoorRuleSet.id
       usePrivateLink: true
+      useManagedCertificate: parameters.frontDoorUseManagedCertificate
       parameters: parameters.storageFrontDoorSite
     }
   }
 
 module storagePrivateEndpoint 'private-endpoint-storage.bicep' =
-  if (conditionalDeployment.deployDataStorage == 'true' && conditionalDeployment.deployDataStoragePrivateEndpointApproval == 'true') {
+  if (conditionalDeployment.deployDataStorage && conditionalDeployment.deployDataStoragePrivateEndpointApproval) {
     name: parameters.storagePrivateEndpointDeploymentName
     dependsOn: [
       storageFrontDoorSite
@@ -208,7 +210,7 @@ module storagePrivateEndpoint 'private-endpoint-storage.bicep' =
   }
 
 module storagePrivateEndpointApproval 'private-endpoint-storage-approve.bicep' =
-  if (conditionalDeployment.deployDataStorage == 'true' && conditionalDeployment.deployDataStoragePrivateEndpointApproval == 'true') {
+  if (conditionalDeployment.deployDataStorage && conditionalDeployment.deployDataStoragePrivateEndpointApproval) {
     name: parameters.storagePrivateEndpointApprovalDeploymentName
     params: {
       storageAccountName: storageAccount.name
@@ -221,7 +223,7 @@ resource redisManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@
 }
 
 resource redisCache 'Microsoft.Cache/redis@2023-08-01' =
-  if (conditionalDeployment.deployDataRedis == 'true') {
+  if (conditionalDeployment.deployDataRedis) {
     name: parameters.redisCacheName
     location: location
     properties: {
@@ -244,7 +246,7 @@ resource redisCache 'Microsoft.Cache/redis@2023-08-01' =
   }
 
 module redisManagedIdentityAdminUser 'data-redis-adminuser.bicep' =
-  if (conditionalDeployment.deployDataRedis == 'true') {
+  if (conditionalDeployment.deployDataRedis) {
     name: parameters.redisAdminManagedIdentityDeploymentName
     params: {
       redisCacheAccessPolicyName: '${redisCache.name}-accesspolicy-mi'
@@ -256,8 +258,12 @@ module redisManagedIdentityAdminUser 'data-redis-adminuser.bicep' =
   }
 
 module redisEntraUserAdminUser 'data-redis-adminuser.bicep' =
-  if (conditionalDeployment.deployDataRedis == 'true') {
+  if (conditionalDeployment.deployDataRedis) {
     name: parameters.redisAdminUserDeploymentName
+    dependsOn: [
+      // We want the managed identity to always succeed, so run this one second
+      redisManagedIdentityAdminUser
+    ]
     params: {
       redisCacheAccessPolicyName: '${redisCache.name}-accesspolicy-ei'
       identityName: parameters.entraUserEmail
@@ -268,7 +274,7 @@ module redisEntraUserAdminUser 'data-redis-adminuser.bicep' =
   }
 
 module redisPrivateEndpoint 'private-endpoint.bicep' =
-  if (conditionalDeployment.deployDataRedis == 'true') {
+  if (conditionalDeployment.deployDataRedis) {
     name: parameters.redisPrivateEndpointDeploymentName
     params: {
       baseName: redisCache.name

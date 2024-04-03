@@ -59,7 +59,8 @@ az account list-locations --query "[?metadata.regionType=='Physical' && metadata
 | CERTIFICATE_BASE64_STRING | A Base 64 encoded PFX certificate to be used for HTTPS     |
 | CERTIFICATE_PASSWORD      | The password of the PFX certificate                        |
 
-To Base 64 encode a certificate, you can use the following command:
+If you are choosing to Bring Your Own Certificate (BYOC), you'll need to Base 64
+encode a certificate; you can use the following command:
 
 ```sh
 # For Linux:
@@ -79,6 +80,7 @@ before setting to `false`.
 | Variable                             | Description                                                                                                     |
 | ------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
 | UPLOAD_CERTIFICATE                   | Should the PFX certificate be uploaded                                                                          |
+| USE_MANAGED_CERTIFICATE              | Should Front Door use the automatically provisioned certifate instead of the BYOC                               |
 | DEPLOY_COMPUTE                       | Should the Compute Bicep module be deployed                                                                     |
 | DEPLOY_COMPUTE_APPSERVICE_PEAPPROVAL | Should the Compute App Services Bicep module deploy the Front Door Private Endpoint Approval (only needed once) |
 | DEPLOY_DATA                          | Should the Data Bicep module be deployed                                                                        |

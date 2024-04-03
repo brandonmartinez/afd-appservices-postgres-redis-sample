@@ -13,7 +13,7 @@ param tags object
 // Modules and Resources
 //////////////////////////////////////////////////
 module management './management.bicep' =
-  if (conditionalDeployment.deployManagement == 'true') {
+  if (conditionalDeployment.deployManagement) {
     name: managementModuleParameters.deploymentName
     params: {
       location: location
@@ -23,7 +23,7 @@ module management './management.bicep' =
   }
 
 module security './security.bicep' =
-  if (conditionalDeployment.deploySecurity == 'true') {
+  if (conditionalDeployment.deploySecurity) {
     name: securityModuleParameters.deploymentName
     params: {
       location: location
@@ -33,9 +33,9 @@ module security './security.bicep' =
   }
 
 module networking './networking.bicep' =
-  if (conditionalDeployment.deployNetworking == 'true') {
+  if (conditionalDeployment.deployNetworking) {
     name: networkingModuleParameters.deploymentName
-    dependsOn: (conditionalDeployment.deploySecurity == 'true')
+    dependsOn: (conditionalDeployment.deploySecurity)
       ? [
           // wait for networking as we need the vnet and subnet
           security
@@ -49,9 +49,9 @@ module networking './networking.bicep' =
   }
 
 module data 'data.bicep' =
-  if (conditionalDeployment.deployData == 'true') {
+  if (conditionalDeployment.deployData) {
     name: dataModuleParameters.deploymentName
-    dependsOn: (conditionalDeployment.deployNetworking == 'true')
+    dependsOn: (conditionalDeployment.deployNetworking)
       ? [
           // wait for networking as we need the vnet and subnet
           networking
@@ -66,12 +66,14 @@ module data 'data.bicep' =
   }
 
 module compute 'compute.bicep' =
-  if (conditionalDeployment.deployCompute == 'true') {
+  if (conditionalDeployment.deployCompute) {
     name: computeModuleParameters.deploymentName
-    dependsOn: (conditionalDeployment.deployNetworking == 'true')
+    dependsOn: (conditionalDeployment.deployNetworking)
       ? [
           // wait for networking as we need the vnet and subnet
           networking
+          // wait for data as we need the storage account
+          data
         ]
       : []
     params: {
@@ -86,18 +88,18 @@ module compute 'compute.bicep' =
 //////////////////////////////////////////////////
 var generatedOutputs = {
   // Management Module Outputs
-  logAnalyticsWorkspaceId: (conditionalDeployment.deployManagement == 'true')
+  logAnalyticsWorkspaceId: (conditionalDeployment.deployManagement)
     ? management.outputs.logAnalyticsWorkspaceId
     : ''
-  applicationInsightsId: (conditionalDeployment.deployManagement == 'true')
+  applicationInsightsId: (conditionalDeployment.deployManagement)
     ? management.outputs.applicationInsightsId
     : ''
-  applicationInsightsConnectionString: (conditionalDeployment.deployManagement == 'true')
+  applicationInsightsConnectionString: (conditionalDeployment.deployManagement)
     ? management.outputs.applicationInsightsConnectionString
     : ''
 
   // Networking Module Outputs
-  natGatewayId: (conditionalDeployment.deployNetworking == 'true') ? networking.outputs.natGatewayId : ''
+  natGatewayId: (conditionalDeployment.deployNetworking) ? networking.outputs.natGatewayId : ''
 }
 
 output generatedOutputs object = generatedOutputs

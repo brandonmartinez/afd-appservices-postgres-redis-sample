@@ -29,7 +29,10 @@ param privateEndpointResourceType string = ''
 
 @secure()
 @description('The Certificate Secret Id from Front Door.')
-param certificateSecretId string
+param certificateSecretId string = ''
+
+@description('Whether to use the Front Door Managed Certificate or Key Vault Secret.')
+param useManagedCertificate bool = true
 
 @description('Parameters specific to this module.')
 param parameters object
@@ -62,7 +65,7 @@ resource originGroup 'Microsoft.Cdn/profiles/originGroups@2023-05-01' = {
   }
 }
 
-resource origin 'Microsoft.Cdn/profiles/originGroups/origins@2023-05-01' = {
+resource origin 'Microsoft.Cdn/profiles/originGroups/origins@2023-07-01-preview' = {
   parent: originGroup
   name: parameters.originName
   properties: {
@@ -92,11 +95,13 @@ resource customDomain 'Microsoft.Cdn/profiles/customDomains@2021-06-01' = {
   properties: {
     hostName: parameters.customDomain
     tlsSettings: {
-      certificateType: 'CustomerCertificate'
+      certificateType: (useManagedCertificate) ? 'ManagedCertificate' : 'CustomerCertificate'
       minimumTlsVersion: 'TLS12'
-      secret: {
-        id: certificateSecretId
-      }
+      secret: (useManagedCertificate)
+        ? null
+        : {
+            id: certificateSecretId
+          }
     }
   }
 }
@@ -144,3 +149,14 @@ resource dnsCnameRecord 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = {
     }
   }
 }
+
+module appServiceDnsTxtRecord 'networking-frontdoor-site-domainvalidation.bicep' =
+  if (useManagedCertificate) {
+    name: parameters.customDomainValidationDeploymentName
+    params: {
+      dnsZoneName: dnsZoneName
+      customDomainName: customDomain.name
+      customDomainPrefix: parameters.customDomainPrefix
+      profileName: profile.name
+    }
+  }

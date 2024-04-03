@@ -30,10 +30,11 @@ resource frontDoorEndpoint 'Microsoft.Cdn/profiles/afdEndpoints@2021-06-01' exis
   name: parameters.frontDoorEndpointName
 }
 
-resource frontDoorCertificateSecret 'Microsoft.Cdn/profiles/secrets@2023-05-01' existing = {
-  parent: frontDoorProfile
-  name: parameters.frontDoorCertificateSecretName
-}
+resource frontDoorCertificateSecret 'Microsoft.Cdn/profiles/secrets@2023-05-01' existing =
+  if (!parameters.frontDoorUseManagedCertificate) {
+    parent: frontDoorProfile
+    name: parameters.frontDoorCertificateSecretName
+  }
 
 resource frontDoorRuleSet 'Microsoft.Cdn/profiles/ruleSets@2023-07-01-preview' existing = {
   parent: frontDoorProfile
@@ -167,7 +168,7 @@ module webAppAppServiceFrontDoorSite 'networking-frontdoor-site.bicep' = {
   name: parameters.appServiceFrontDoorSiteDeploymentName
   params: {
     location: location
-    certificateSecretId: frontDoorCertificateSecret.id
+    certificateSecretId: (!parameters.frontDoorUseManagedCertificate) ? frontDoorCertificateSecret.id : null
     dnsZoneName: parameters.frontDoorDnsZoneName
     endpointHostName: frontDoorEndpoint.properties.hostName
     endpointName: parameters.frontDoorEndpointName
@@ -181,7 +182,7 @@ module webAppAppServiceFrontDoorSite 'networking-frontdoor-site.bicep' = {
 }
 
 module webAppAppServicePrivateEndpoint 'private-endpoint-appservice.bicep' =
-  if (conditionalDeployment.deployComputeAppServicePrivateEndpointApproval == 'true') {
+  if (conditionalDeployment.deployComputeAppServicePrivateEndpointApproval) {
     name: parameters.appServicesPrivateEndpointDeploymentName
     dependsOn: [
       webAppAppServiceFrontDoorSite
@@ -192,7 +193,7 @@ module webAppAppServicePrivateEndpoint 'private-endpoint-appservice.bicep' =
   }
 
 module webAppAppServicePrivateEndpointApproval 'private-endpoint-appservice-approve.bicep' =
-  if (conditionalDeployment.deployComputeAppServicePrivateEndpointApproval == 'true') {
+  if (conditionalDeployment.deployComputeAppServicePrivateEndpointApproval) {
     name: parameters.appServicesPrivateEndpointApprovalDeploymentName
     params: {
       appServiceName: webAppAppService.name

@@ -62,14 +62,15 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   }
 }
 
-resource certificateBase64StringSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' = {
-  parent: keyVault
-  name: parameters.certificateSecretName
-  properties: {
-    value: parameters.certificateBase64String
-    contentType: 'application/x-pkcs12'
+resource certificateBase64StringSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' =
+  if (!parameters.useManagedCertificate) {
+    parent: keyVault
+    name: parameters.certificateSecretName
+    properties: {
+      value: parameters.certificateBase64String
+      contentType: 'application/x-pkcs12'
+    }
   }
-}
 
 resource resourcePasswordSecret 'Microsoft.KeyVault/vaults/secrets@2022-11-01' = {
   parent: keyVault
@@ -113,47 +114,48 @@ resource accessPolicy 'Microsoft.KeyVault/vaults/accessPolicies@2023-02-01' = {
   }
 }
 
-resource deploymentScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = if(parameters.uploadCertificate == 'true') {
-  name: '${parameters.certificateSecretName}-importCertificate'
-  dependsOn: [
-    accessPolicy
-  ]
-  kind: 'AzureCLI'
-  location: location
-  identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${frontDoorManagedIdentity.id}': {}
+resource deploymentScript 'Microsoft.Resources/deploymentScripts@2023-08-01' =
+  if (parameters.uploadCertificate && !parameters.useManagedCertificate) {
+    name: '${parameters.certificateSecretName}-importCertificate'
+    dependsOn: [
+      accessPolicy
+    ]
+    kind: 'AzureCLI'
+    location: location
+    identity: {
+      type: 'UserAssigned'
+      userAssignedIdentities: {
+        '${frontDoorManagedIdentity.id}': {}
+      }
     }
-  }
-  properties: {
-    azCliVersion: '2.54.0'
-    scriptContent: '''
+    properties: {
+      azCliVersion: '2.54.0'
+      scriptContent: '''
       echo "$CERTIFICATE_BASE64" | base64 -d > certificate.pfx
       az keyvault certificate import --vault-name "$KEY_VAULT_NAME" --name "$CERTIFICATE_NAME" --file certificate.pfx --password "$CERTIFICATE_PASSWORD"
     '''
-    environmentVariables: [
-      {
-        name: 'KEY_VAULT_NAME'
-        value: keyVault.name
-      }
-      {
-        name: 'CERTIFICATE_BASE64'
-        value: parameters.certificateBase64String
-      }
-      {
-        name: 'CERTIFICATE_NAME'
-        value: parameters.certificateCertificateName
-      }
-      {
-        name: 'CERTIFICATE_PASSWORD'
-        value: parameters.certificatePassword
-      }
-    ]
-    timeout: 'PT5M'
-    retentionInterval: 'P1D'
+      environmentVariables: [
+        {
+          name: 'KEY_VAULT_NAME'
+          value: keyVault.name
+        }
+        {
+          name: 'CERTIFICATE_BASE64'
+          value: parameters.certificateBase64String
+        }
+        {
+          name: 'CERTIFICATE_NAME'
+          value: parameters.certificateCertificateName
+        }
+        {
+          name: 'CERTIFICATE_PASSWORD'
+          value: parameters.certificatePassword
+        }
+      ]
+      timeout: 'PT5M'
+      retentionInterval: 'P1D'
+    }
   }
-}
 
 // Outputs
 //////////////////////////////////////////////////

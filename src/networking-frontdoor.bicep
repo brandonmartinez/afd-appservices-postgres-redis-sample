@@ -83,19 +83,20 @@ resource securityPolicy 'Microsoft.Cdn/profiles/securityPolicies@2021-06-01' = {
   }
 }
 
-resource frontDoorCertificateSecret 'Microsoft.Cdn/profiles/secrets@2023-05-01' = {
-  parent: profile
-  name: parameters.frontDoorCertificateSecretName
-  properties: {
-    parameters: {
-      type: 'CustomerCertificate'
-      useLatestVersion: true
-      secretSource: {
-        id: keyVault::certificateSecret.id
+resource frontDoorCertificateSecret 'Microsoft.Cdn/profiles/secrets@2023-05-01' =
+  if (!parameters.frontDoorUseManagedCertificate) {
+    parent: profile
+    name: parameters.frontDoorCertificateSecretName
+    properties: {
+      parameters: {
+        type: 'CustomerCertificate'
+        useLatestVersion: true
+        secretSource: {
+          id: keyVault::certificateSecret.id
+        }
       }
     }
   }
-}
 
 resource frontDoorRuleSet 'Microsoft.Cdn/profiles/ruleSets@2023-07-01-preview' = {
   parent: profile
@@ -117,9 +118,7 @@ resource frontDoorRules 'Microsoft.Cdn/profiles/ruleSets/rules@2023-07-01-previe
         }
       }
     ]
-    conditions: [
-
-    ]
+    conditions: []
     matchProcessingBehavior: 'Continue'
     order: 1
   }
