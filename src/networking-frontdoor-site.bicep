@@ -36,16 +36,16 @@ param parameters object
 
 // Resources
 //////////////////////////////////////////////////
-resource profile 'Microsoft.Cdn/profiles@2022-11-01-preview' existing = {
+resource profile 'Microsoft.Cdn/profiles@2023-05-01' existing = {
   name: profileName
 }
 
-resource endpoint 'Microsoft.Cdn/profiles/afdEndpoints@2021-06-01' existing = {
+resource endpoint 'Microsoft.Cdn/profiles/afdEndpoints@2023-05-01' existing = {
   parent: profile
   name: endpointName
 }
 
-resource originGroup 'Microsoft.Cdn/profiles/originGroups@2021-06-01' = {
+resource originGroup 'Microsoft.Cdn/profiles/originGroups@2023-05-01' = {
   parent: profile
   name: parameters.originGroupName
   properties: {
@@ -62,7 +62,7 @@ resource originGroup 'Microsoft.Cdn/profiles/originGroups@2021-06-01' = {
   }
 }
 
-resource origin 'Microsoft.Cdn/profiles/originGroups/origins@2021-06-01' = {
+resource origin 'Microsoft.Cdn/profiles/originGroups/origins@2023-05-01' = {
   parent: originGroup
   name: parameters.originName
   properties: {

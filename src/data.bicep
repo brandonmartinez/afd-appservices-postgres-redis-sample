@@ -180,7 +180,7 @@ module storageFrontDoorSite 'networking-frontdoor-site.bicep' = {
     dnsZoneName: parameters.frontDoorDnsZoneName
     endpointHostName: frontDoorEndpoint.properties.hostName
     endpointName: parameters.frontDoorEndpointName
-    privateEndpointResourceId: storagePrivateEndpoint.outputs.privateEndpointId
+    privateEndpointResourceId: storageAccount.id
     privateEndpointResourceType: 'blob'
     profileName: parameters.frontDoorProfileName
     ruleSetId: frontDoorRuleSet.id
