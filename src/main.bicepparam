@@ -63,6 +63,7 @@ var securityVariables = {
   frontDoorManagedIdentityName: 'id-${appenv}-frontdoor'
   postgresManagedIdentityName: 'id-${appenv}-postgres'
   redisManagedIdentityName: 'id-${appenv}-redis'
+  storageManagedIdentityName: 'id-${appenv}-storage'
   virtualMachineManagedIdentityName: 'id-${appenv}-virtualmachine'
 
   // Key Vault Variables
@@ -139,14 +140,18 @@ var networkingVariables = {
 
 var dataVariables = {
   deploymentName: 'az-data-${currentDateTime}'
-  postgressAdminManagedIdentityDeploymentName: 'az-data-admin-mi-${currentDateTime}'
-  postgressAdminUserDeploymentName: 'az-data-admin-ei-${currentDateTime}'
+  postgresAdminManagedIdentityDeploymentName: 'az-data-postgress-admin-mi-${currentDateTime}'
+  postgresAdminUserDeploymentName: 'az-data-postgress-admin-ei-${currentDateTime}'
+  postgresDeploymentName: 'az-data-postgress-${currentDateTime}'
   redisAdminManagedIdentityDeploymentName: 'az-data-redis-admin-mi-${currentDateTime}'
   redisAdminUserDeploymentName: 'az-data-redis-admin-ei-${currentDateTime}'
+  redisDeploymentName: 'az-data-redis-${currentDateTime}'
   redisPrivateEndpointDeploymentName: 'az-data-redis-pe-${currentDateTime}'
+  storageDeploymentName: 'az-data-storage-${currentDateTime}'
   storageFrontDoorSiteDeploymentName: 'az-data-storage-fds-${currentDateTime}'
-  storagePrivateEndpointDeploymentName: 'az-data-storage-pe-${currentDateTime}'
-  storagePrivateEndpointApprovalDeploymentName: 'az-data-storage-pea-${currentDateTime}'
+  storagePrivateEndpointApprovalDeploymentName: 'az-data-storage-pew-pea-${currentDateTime}'
+  storagePrivateEndpointDeploymentName: 'az-data-storage-pew-pe-${currentDateTime}'
+  storagePrivateEndpointWorkflowDeploymentName: 'az-data-storage-pew-${currentDateTime}'
 
   // Existing Resource References
   frontDoorCertificateSecretName: networkingVariables.frontDoorCertificateSecretName
@@ -158,6 +163,7 @@ var dataVariables = {
   postgresManagedIdentityName: securityVariables.postgresManagedIdentityName
   postgresSubnetName: networkingVariables.postgresSubnetName
   storageSubnetName: networkingVariables.storageSubnetName
+  storageManagedIdentityName: securityVariables.storageManagedIdentityName
   virtualMachineSubnetName: networkingVariables.virtualMachineSubnetName
   virtualNetworkName: networkingVariables.virtualNetworkName
 
@@ -199,11 +205,13 @@ var computeVariables = {
   deploymentName: 'az-compute-${currentDateTime}'
   appServicesDeploymentName: 'az-compute-appservices-${currentDateTime}'
   appServiceFrontDoorSiteDeploymentName: 'az-compute-appservices-fds-${currentDateTime}'
-  appServicesPrivateEndpointDeploymentName: 'az-compute-appservices-pe-${currentDateTime}'
-  appServicesPrivateEndpointApprovalDeploymentName: 'az-compute-appservices-pea-${currentDateTime}'
+  appServicesPrivateEndpointWorkflowDeploymentName: 'az-compute-appservices-pew-${currentDateTime}'
+  appServicesPrivateEndpointDeploymentName: 'az-compute-appservices-pew-pe-${currentDateTime}'
+  appServicesPrivateEndpointApprovalDeploymentName: 'az-compute-appservices-pew-pea-${currentDateTime}'
   virtualMachineDeploymentName: 'az-compute-virtualmachine-${currentDateTime}'
 
   // Existing Resource References
+  applicationInsightsName: managementVariables.applicationInsightsName
   frontDoorCertificateSecretName: networkingVariables.frontDoorCertificateSecretName
   frontDoorDnsZoneName: networkingVariables.dnsZoneName
   frontDoorEndpointName: networkingVariables.frontDoorEndpointName
@@ -214,11 +222,12 @@ var computeVariables = {
   postgresServerName: dataVariables.postgresServerName
   redisCacheName: dataVariables.redisCacheName
   redisManagedIdentityName: securityVariables.redisManagedIdentityName
+  storageAccountName: dataVariables.storageAccountName
+  storageManagedIdentityName: securityVariables.storageManagedIdentityName
+  virtualNetworkName: networkingVariables.virtualNetworkName
 
   // General Variables
-  applicationInsightsName: managementVariables.applicationInsightsName
-  storageAccountName: dataVariables.storageAccountName
-  virtualNetworkName: networkingVariables.virtualNetworkName
+  assetsBaseDomain: dataVariables.storageFrontDoorSite.customDomain
 
   // App Service Variables
   appServicePlanName: 'plan-${appenv}'

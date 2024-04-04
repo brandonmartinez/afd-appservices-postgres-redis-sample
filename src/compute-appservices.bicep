@@ -9,8 +9,8 @@ param parameters object
 @description('Tags to associate with the resources.')
 param tags object
 
-@description('Configuration for conditional deployment of resources.')
-param conditionalDeployment object
+@description('Deploy the App Services Private Endpoint approval workflow.')
+param deployComputeAppServicePrivateEndpointApproval bool = false
 
 // Resources
 //////////////////////////////////////////////////
@@ -51,6 +51,10 @@ resource postgresManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentiti
 
 resource redisManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: parameters.redisManagedIdentityName
+}
+
+resource storageManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
+  name: parameters.storageManagedIdentityName
 }
 
 resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing = {
@@ -124,6 +128,22 @@ resource webAppAppService 'Microsoft.Web/sites@2023-01-01' = {
           value: applicationInsights.properties.ConnectionString
         }
         {
+          name: 'AZURE_STORAGE_ACCOUNT_NAME'
+          value: parameters.storageAccountName
+        }
+        {
+          name: 'AZURE_STORAGE_ACCOUNT_CONTAINER_NAME'
+          value: 'images'
+        }
+        {
+          name: 'AZURE_STORAGE_ACCOUNT_MANAGED_IDENTITY_CLIENTID'
+          value: storageManagedIdentity.properties.clientId
+        }
+        {
+          name: 'IMAGES_BASE_URL'
+          value: 'https://${parameters.assetsBaseDomain}/images/'
+        }
+        {
           name: 'POSTGRES_DATABASE_NAME'
           value: 'webapp'
         }
@@ -160,6 +180,7 @@ resource webAppAppService 'Microsoft.Web/sites@2023-01-01' = {
       '${appServiceManagedIdentity.id}': {}
       '${postgresManagedIdentity.id}': {}
       '${redisManagedIdentity.id}': {}
+      '${storageManagedIdentity.id}': {}
     }
   }
 }
@@ -181,22 +202,14 @@ module webAppAppServiceFrontDoorSite 'networking-frontdoor-site.bicep' = {
   }
 }
 
-module webAppAppServicePrivateEndpoint 'private-endpoint-appservice.bicep' =
-  if (conditionalDeployment.deployComputeAppServicePrivateEndpointApproval) {
-    name: parameters.appServicesPrivateEndpointDeploymentName
+module webAppAppServicePrivateEndpoint 'compute-appservices-pew.bicep' =
+  if (deployComputeAppServicePrivateEndpointApproval) {
+    name: parameters.appServicesPrivateEndpointWorkflowDeploymentName
     dependsOn: [
+      webAppAppService
       webAppAppServiceFrontDoorSite
     ]
     params: {
-      appServiceName: webAppAppService.name
-    }
-  }
-
-module webAppAppServicePrivateEndpointApproval 'private-endpoint-appservice-approve.bicep' =
-  if (conditionalDeployment.deployComputeAppServicePrivateEndpointApproval) {
-    name: parameters.appServicesPrivateEndpointApprovalDeploymentName
-    params: {
-      appServiceName: webAppAppService.name
-      privateEndpointConnectionName: webAppAppServicePrivateEndpoint.outputs.appServicePrivateEndpointConnectionName
+      parameters: parameters
     }
   }

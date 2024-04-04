@@ -20,7 +20,7 @@ module appServices 'compute-appservices.bicep' = {
     location: location
     parameters: parameters
     tags: tags
-    conditionalDeployment: conditionalDeployment
+    deployComputeAppServicePrivateEndpointApproval: conditionalDeployment.deployComputeAppServicePrivateEndpointApproval
   }
 }
 

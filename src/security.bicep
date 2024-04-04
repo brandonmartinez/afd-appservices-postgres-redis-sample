@@ -29,8 +29,14 @@ resource appServiceManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdenti
   tags: tags
 }
 
-resource postgresManagedIdentityName 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+resource postgresManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: parameters.postgresManagedIdentityName
+  location: location
+  tags: tags
+}
+
+resource storageManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: parameters.storageManagedIdentityName
   location: location
   tags: tags
 }
