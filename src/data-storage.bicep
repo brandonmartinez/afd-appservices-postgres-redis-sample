@@ -103,19 +103,29 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   }
 }
 
-@description('This is the built-in Storage Account Contributor role. See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles')
-resource storageContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+@description('This is the built-in Storage Blob Data Contributor role. See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage')
+resource storageBlobDataContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   scope: subscription()
-  name: 'b24988ac-6180-42a0-ab88-20f7382dd24c'
+  name: 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'
 }
 
 resource storageManagedIdentityRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: storageAccount
-  name: guid(storageAccount.id, storageManagedIdentity.id, storageContributorRoleDefinition.id)
+  name: guid(storageAccount.id, storageManagedIdentity.id, storageBlobDataContributorRoleDefinition.id)
   properties: {
-    roleDefinitionId: storageContributorRoleDefinition.id
+    roleDefinitionId: storageBlobDataContributorRoleDefinition.id
     principalId: storageManagedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
+  }
+}
+
+resource storageEntraUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: storageAccount
+  name: guid(storageAccount.id, parameters.entraUserObjectId, storageBlobDataContributorRoleDefinition.id)
+  properties: {
+    roleDefinitionId: storageBlobDataContributorRoleDefinition.id
+    principalId: parameters.entraUserObjectId
+    principalType: 'User'
   }
 }
 
