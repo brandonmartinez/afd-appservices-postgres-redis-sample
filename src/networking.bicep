@@ -143,6 +143,11 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-09-01' = {
           networkSecurityGroup: {
             id: vnetIntegrationNetworkSecurityGroup.id
           }
+          serviceEndpoints: [
+            {
+              service: 'Microsoft.Storage'
+            }
+          ]
         }
       }
       {

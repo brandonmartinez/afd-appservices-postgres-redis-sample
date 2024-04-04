@@ -16,6 +16,9 @@ param conditionalDeployment object
 //////////////////////////////////////////////////
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
   name: parameters.virtualNetworkName
+  resource virtualMachineSubnet 'subnets@2023-09-01' existing = {
+    name: parameters.virtualMachineSubnetName
+  }
   resource postgresSubnet 'subnets@2023-09-01' existing = {
     name: parameters.postgresSubnetName
   }
@@ -150,6 +153,12 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' =
           {
             action: 'Allow'
             value: parameters.storageAccountAllowedIpAddress
+          }
+        ]
+        virtualNetworkRules: [
+          {
+            action: 'Allow'
+            id: virtualNetwork::virtualMachineSubnet.id
           }
         ]
       }

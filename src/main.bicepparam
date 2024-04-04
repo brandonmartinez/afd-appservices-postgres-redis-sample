@@ -155,14 +155,13 @@ var dataVariables = {
   frontDoorProfileName: networkingVariables.frontDoorProfileName
   frontDoorRuleSetName: networkingVariables.frontDoorRuleSetName
   frontDoorUseManagedCertificate: networkingVariables.frontDoorUseManagedCertificate
-
-  // General Variables
+  postgresManagedIdentityName: securityVariables.postgresManagedIdentityName
+  postgresSubnetName: networkingVariables.postgresSubnetName
+  storageSubnetName: networkingVariables.storageSubnetName
+  virtualMachineSubnetName: networkingVariables.virtualMachineSubnetName
   virtualNetworkName: networkingVariables.virtualNetworkName
 
   // Postgres Variables
-  postgresManagedIdentityName: securityVariables.postgresManagedIdentityName
-  postgresSubnetName: networkingVariables.postgresSubnetName
-
   postgresServerAdminPassword: resourcePassword
   postgresServerAdminUsername: resourceUserName
   postgresServerName: 'pgdb-${appenv}-server'
@@ -177,7 +176,6 @@ var dataVariables = {
   // Storage Variables
   storageAccountName: storageAccountName
   storageAccountHostName: storageAccountHostName
-  storageSubnetName: networkingVariables.storageSubnetName
   storageAccountAllowedIpAddress: publicIpAddress
   storageFrontDoorSite: {
     customDomainValidationDeploymentName: 'az-data-storage-fds-cd-${currentDateTime}'
