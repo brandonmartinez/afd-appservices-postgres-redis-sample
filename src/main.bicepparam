@@ -154,6 +154,7 @@ var dataVariables = {
   storagePrivateEndpointWorkflowDeploymentName: 'az-data-storage-pew-${currentDateTime}'
 
   // Existing Resource References
+  appServicesSubnetName: networkingVariables.appServicesSubnetName
   frontDoorCertificateSecretName: networkingVariables.frontDoorCertificateSecretName
   frontDoorDnsZoneName: networkingVariables.dnsZoneName
   frontDoorEndpointName: networkingVariables.frontDoorEndpointName
@@ -162,8 +163,8 @@ var dataVariables = {
   frontDoorUseManagedCertificate: networkingVariables.frontDoorUseManagedCertificate
   postgresManagedIdentityName: securityVariables.postgresManagedIdentityName
   postgresSubnetName: networkingVariables.postgresSubnetName
-  storageSubnetName: networkingVariables.storageSubnetName
   storageManagedIdentityName: securityVariables.storageManagedIdentityName
+  storageSubnetName: networkingVariables.storageSubnetName
   virtualMachineSubnetName: networkingVariables.virtualMachineSubnetName
   virtualNetworkName: networkingVariables.virtualNetworkName
 

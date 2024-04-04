@@ -19,6 +19,9 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-09-01' existing 
   resource virtualMachineSubnet 'subnets@2023-09-01' existing = {
     name: parameters.virtualMachineSubnetName
   }
+  resource appServicesSubnet 'subnets@2023-09-01' existing = {
+    name: parameters.appServicesSubnetName
+  }
   resource storageSubnet 'subnets@2023-09-01' existing = {
     name: parameters.storageSubnetName
   }
@@ -77,6 +80,10 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
         {
           action: 'Allow'
           id: virtualNetwork::virtualMachineSubnet.id
+        }
+        {
+          action: 'Allow'
+          id: virtualNetwork::appServicesSubnet.id
         }
       ]
     }
