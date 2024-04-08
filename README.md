@@ -28,22 +28,29 @@ to configure:
 
 | Variable                | Description                                                                                       |
 | ----------------------- | ------------------------------------------------------------------------------------------------- |
-| AZURE_LOCATION          | The Azure region that resources will be deployed to - see command below                           |
+| AZURE_LOCATION          | The Azure region that resources will be deployed to - note the limitations below                  |
 | AZURE_APPENV            | Short (_< 8 characters_), unique string to identify the deployed resources                        |
 | AZURE_SUBSCRIPTIONID    | The GUID of the Azure subscription resources will be deployed into                                |
 | AZURE_RESOURCE_USERNAME | Short username that will be used as a default login to deployed resources (e.g., Virtual Machine) |
 | AZURE_RESOURCE_PASSWORD | Password to login to deployed resources for the `AZURE_RESOURCE_USERNAME`                         |
 
-To get available Azure Locations, run the following `az` command (note, not all
-services may be available in all regions):
+**NOTE:** As of today (April 2024), due to a limitation on Azure Front Door
+Premium Private Link connections, only the following regions are supported:
 
-```sh
-# If you're not logged in, run this first:
-az login
+| Americas         | Europe               | Africa             | Asia Pacific   |
+| ---------------- | -------------------- | ------------------ | -------------- |
+| Brazil South     | France Central       | South Africa North | Australia East |
+| Canada Central   | Germany West Central |                    | Central India  |
+| Central US       | North Europe         |                    | Japan East     |
+| East US          | Norway East          |                    | Korea Central  |
+| East US 2        | UK South             |                    | East Asia      |
+| South Central US | West Europe          |                    |                |
+| West US 3        | Sweden Central       |                    |                |
+| US Gov Arizona   |                      |                    |                |
+| US Gov Texas     |                      |                    |                |
 
-# Then this:
-az account list-locations --query "[?metadata.regionType=='Physical' && metadata.regionCategory=='Recommended'].{RegionName:displayName}" --output table
-```
+For an up-to-date list, visit:
+[Secure your Origin with Private Link in Azure Front Door Premium | Region availability](https://learn.microsoft.com/en-us/azure/frontdoor/private-link#region-availability)
 
 #### Current User Config
 
