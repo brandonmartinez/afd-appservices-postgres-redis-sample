@@ -5,3 +5,4 @@
 # Files to ignore
 .env
 *.bkp
+.DS_Store
