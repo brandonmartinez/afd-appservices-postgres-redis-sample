@@ -114,6 +114,24 @@ resource vnetIntegrationNetworkSecurityGroup 'Microsoft.Network/networkSecurityG
   name: parameters.vnetIntegrationNetworkSecurityGroupName
   location: location
   tags: tags
+  properties: {
+    securityRules: [
+      {
+        name: 'AllowAzureActiveDirectoryOutbound'
+        properties: {
+          description: 'Allow Azure Active Directory'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '443'
+          sourceAddressPrefix: 'VirtualNetwork'
+          destinationAddressPrefix: 'AzureActiveDirectory'
+          access: 'Allow'
+          priority: 100
+          direction: 'Outbound'
+        }
+      }
+    ]
+  }
 }
 
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-09-01' = {

@@ -7,18 +7,20 @@ source ./logging.sh
 export CURRENT_DATE_TIME=$(date +"%Y%m%dT%H%M")
 LOG_FILE_NAME="deploy-$CURRENT_DATE_TIME.log"
 
-if [ ! -f .env ]; then
-    cp .envsample .env
-    warn "Update .env with parameter values and run again"
+export ENV_FILE="${1:-.env}"
+
+if [ ! -f $ENV_FILE ]; then
+    cp .envsample $ENV_FILE
+    warn "Update $ENV_FILE with parameter values and run again"
     exit 1
 fi
 
-debug "Sourcing .env file"
+debug "Sourcing $ENV_FILE file"
 
 set -a
 
 # pulling from the .env file
-source .env
+source $ENV_FILE
 # some other exports that are used
 export AZURE_RESOURCEGROUP="rg-$AZURE_APPENV"
 
@@ -27,6 +29,11 @@ set +a
 WORKING_DIR=$(dirname "$(realpath "$0")")
 SRC_DIR="$WORKING_DIR/src"
 TEMP_DIR="$WORKING_DIR/.temp"
+
+if [ "$ENV_FILE" != ".env" ]; then
+    SUBFOLDER=$(echo "$ENV_FILE" | awk -F '.' '{print $NF}')
+    TEMP_DIR="$TEMP_DIR/$SUBFOLDER"
+fi
 
 debug "Making temporary directory for merged files"
 mkdir -p "$TEMP_DIR"

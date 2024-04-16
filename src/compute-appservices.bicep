@@ -87,7 +87,7 @@ resource webAppAppService 'Microsoft.Web/sites@2023-01-01' = {
   name: parameters.appServiceWebAppName
   location: location
   tags: tags
-  kind: 'linux'
+  kind: 'linux,container,app'
   properties: {
     serverFarmId: appServicePlan.id
     virtualNetworkSubnetId: virtualNetwork::appServicesSubnet.id
