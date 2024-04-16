@@ -2,12 +2,18 @@
 
 set -eo pipefail
 
-source ./logging.sh
+export ENV_FILE="${1:-.env}"
 
 export CURRENT_DATE_TIME=$(date +"%Y%m%dT%H%M")
-LOG_FILE_NAME="deploy-$CURRENT_DATE_TIME.log"
 
-export ENV_FILE="${1:-.env}"
+if [ "$ENV_FILE" = ".env" ]; then
+    export LOG_FILE_NAME="deploy-$CURRENT_DATE_TIME.log"
+else
+    SUBLOG=$(echo "$ENV_FILE" | awk -F '.' '{print $NF}')
+    export LOG_FILE_NAME="$SUBLOG-deploy-$CURRENT_DATE_TIME.log"
+fi
+
+source ./logging.sh
 
 if [ ! -f $ENV_FILE ]; then
     cp .envsample $ENV_FILE
