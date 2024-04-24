@@ -6,6 +6,9 @@ param location string
 @description('Parameters specific to this module.')
 param parameters object
 
+@description('Configuration for conditional deployment of resources.')
+param conditionalDeployment object
+
 @description('Tags to associate with the resources.')
 param tags object
 
@@ -259,6 +262,7 @@ module frontDoor './networking-frontdoor.bicep' = {
   params: {
     parameters: parameters
     tags: tags
+    deployFrontDoorDiagnostics: conditionalDeployment.deployNetworkingFrontDoorDiagnostics
   }
 }
 

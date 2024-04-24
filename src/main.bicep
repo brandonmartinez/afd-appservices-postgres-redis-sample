@@ -44,6 +44,7 @@ module networking './networking.bicep' =
     params: {
       location: location
       tags: tags
+      conditionalDeployment: conditionalDeployment
       parameters: networkingModuleParameters
     }
   }

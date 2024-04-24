@@ -6,6 +6,9 @@ param parameters object
 @description('Tags to associate with the resources.')
 param tags object
 
+@description('Deploy diagnostic logs for Front Door.')
+param deployFrontDoorDiagnostics bool
+
 // Resources
 //////////////////////////////////////////////////
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
@@ -19,6 +22,10 @@ resource frontDoorManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentit
   name: parameters.frontDoorManagedIdentityName
 }
 
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+  name: parameters.logAnalyticsWorkspaceName
+}
+
 resource wafPolicy 'Microsoft.Network/FrontDoorWebApplicationFirewallPolicies@2022-05-01' = {
   name: parameters.frontDoorWafPolicyName
   location: 'global'
@@ -30,6 +37,42 @@ resource wafPolicy 'Microsoft.Network/FrontDoorWebApplicationFirewallPolicies@20
     policySettings: {
       enabledState: 'Enabled'
       mode: 'Detection'
+    }
+    managedRules: {
+      managedRuleSets: [
+        {
+          ruleSetType: 'Microsoft_BotManagerRuleSet'
+          ruleSetVersion: '1.0'
+        }
+      ]
+    }
+    customRules: {
+      rules: [
+        {
+          name: 'ApplyRateLimit'
+          priority: 100
+          enabledState: 'Enabled'
+          ruleType: 'RateLimitRule'
+          rateLimitThreshold: 100
+          rateLimitDurationInMinutes: 1
+          action: 'Block'
+          matchConditions: [
+            // Currently Front Door requires that a rate limit rule has a match condition. This specifies the subset
+            // of requests it should apply to. For this sample, we are using an IP address-based match condition
+            // and setting the value to "not 192.0.2.0/24". This is an IANA documentation range and no real clients
+            // will use that range, so this match condition effectively matches all requests.
+            // Note that the rate limit is applied per IP address.
+            {
+              matchVariable: 'RemoteAddr'
+              operator: 'IPMatch'
+              negateCondition: true
+              matchValue: [
+                '192.0.2.0/24'
+              ]
+            }
+          ]
+        }
+      ]
     }
   }
 }
@@ -123,3 +166,24 @@ resource frontDoorRules 'Microsoft.Cdn/profiles/ruleSets/rules@2023-07-01-previe
     order: 1
   }
 }
+
+resource frontDoorDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' =
+  if (deployFrontDoorDiagnostics) {
+    scope: profile
+    name: '${profile.name}-diagnostics'
+    properties: {
+      workspaceId: logAnalyticsWorkspace.id
+      logs: [
+        {
+          categoryGroup: 'AllLogs'
+          enabled: true
+        }
+      ]
+      metrics: [
+        {
+          category: 'AllMetrics'
+          enabled: true
+        }
+      ]
+    }
+  }

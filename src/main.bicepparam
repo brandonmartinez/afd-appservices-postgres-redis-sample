@@ -37,6 +37,7 @@ var conditionalVariables = {
   deployDataStoragePrivateEndpointApproval: readEnvironmentVariable('DEPLOY_DATA_STORAGE_PEAPPROVAL', 'true') == 'true'
   deployManagement: readEnvironmentVariable('DEPLOY_MANAGEMENT', 'true') == 'true'
   deployNetworking: readEnvironmentVariable('DEPLOY_NETWORKING', 'true') == 'true'
+  deployNetworkingFrontDoorDiagnostics: readEnvironmentVariable('DEPLOY_NETWORKING_FRONTDOOR_DIAGNOSTICS', 'false') == 'true'
   deploySecurity: readEnvironmentVariable('DEPLOY_SECURITY', 'true') == 'true'
 }
 
@@ -88,6 +89,7 @@ var networkingVariables = {
   keyVaultName: securityVariables.keyVaultName
   certificateSecretName: securityVariables.certificateSecretName
   certificateCertificateName: securityVariables.certificateCertificateName
+  logAnalyticsWorkspaceName: managementVariables.logAnalyticsWorkspaceName
 
   // NSG Variables
   bastionNetworkSecurityGroupName: 'nsg-${appenv}-bastion'
