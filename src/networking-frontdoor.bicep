@@ -62,11 +62,6 @@ resource wafPolicy 'Microsoft.Network/FrontDoorWebApplicationFirewallPolicies@20
           rateLimitDurationInMinutes: 5
           action: 'Block'
           matchConditions: [
-            // Currently Front Door requires that a rate limit rule has a match condition. This specifies the subset
-            // of requests it should apply to. For this sample, we are using an IP address-based match condition
-            // and setting the value to "not 192.0.2.0/24". This is an IANA documentation range and no real clients
-            // will use that range, so this match condition effectively matches all requests.
-            // Note that the rate limit is applied per IP address.
             {
               matchVariable: 'SocketAddr'
               operator: 'IPMatch'
